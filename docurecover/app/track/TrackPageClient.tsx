@@ -169,6 +169,12 @@ export default function TrackPageClient() {
                 {daysRemaining} {t(daysRemaining === 1 ? 'day' : 'days', 'hari')}
               </div>
             </div>
+            <div className="col-span-2">
+              <div className="text-xs text-stone-600 mb-1">{t('Application Fee', 'Yuran Permohonan')}</div>
+              <span className="inline-block px-2.5 py-0.5 rounded-full bg-lime-500 text-lime-950 text-xs font-bold">
+                {t('FREE (RM 0.00)', 'PERCUMA (RM 0.00)')}
+              </span>
+            </div>
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
+import ViewModeShell from '@/app/_components/ViewModeShell';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -38,7 +39,7 @@ export default function RootLayout({
       <body
         className={`${inter.className} min-h-screen bg-milk text-stone-900 antialiased selection:bg-lime-300 selection:text-lime-950`}
       >
-        {children}
+        <ViewModeShell>{children}</ViewModeShell>
       </body>
     </html>
   );

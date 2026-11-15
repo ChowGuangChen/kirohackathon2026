@@ -15,6 +15,7 @@ DocuRecover helps Malaysians recover documents that were lost or damaged in a fl
   5. **Track:** shows the tracking ID and what happens next.
 - **Request tracking.** Enter a tracking ID to see the current stage, a timeline, the estimated delivery date and the status of each document. The stages move forward based on how long ago the request was submitted.
 - **EN / BM switch.** The chosen language stays when you move between pages.
+- **Phone View / Website View.** On a computer screen, the Phone View button in the header shows the app inside a phone-sized frame. The Website View button above the frame switches back to the full page. On a real phone the app already uses the phone layout, so the buttons don't appear.
 
 ### Supported documents
 

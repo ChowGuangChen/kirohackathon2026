@@ -49,6 +49,16 @@ export default function HomePage() {
               : 'A simple 5-step process to recover your MyKad, Passport, Birth Certificate, Driving Licence and other important documents'}
           </p>
 
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-lime-500 text-lime-950 text-sm font-bold mb-8">
+            <span>✓</span>
+            <span>
+              {isMs
+                ? 'PERCUMA untuk mangsa bencana. Tiada yuran permohonan (RM 0.00)'
+                : 'FREE for disaster victims. No application fee (RM 0.00)'}
+            </span>
+          </div>
+
+          <div>
           <Link
             href="/recover"
             className="inline-flex items-center px-8 py-4 rounded-xl text-base font-semibold text-lime-950 bg-lime-500 hover:bg-lime-400 shadow-md shadow-lime-500/30 transition-colors"
@@ -58,6 +68,7 @@ export default function HomePage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
+          </div>
         </div>
       </section>
 

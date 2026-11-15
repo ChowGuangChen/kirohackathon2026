@@ -602,6 +602,18 @@ export default function RecoverPage() {
 
                 <div className="border-t border-stone-200 pt-4">
                   <div className="flex items-center justify-between text-sm">
+                    <span className="text-stone-600">{t('Application Fee', 'Yuran Permohonan')}</span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-lime-500 text-lime-950 text-xs font-bold">
+                      {t('FREE (RM 0.00)', 'PERCUMA (RM 0.00)')}
+                    </span>
+                  </div>
+                  <p className="text-xs text-stone-500 mt-1">
+                    {t('Waived for disaster victims.', 'Dikecualikan untuk mangsa bencana.')}
+                  </p>
+                </div>
+
+                <div className="border-t border-stone-200 pt-4">
+                  <div className="flex items-center justify-between text-sm">
                     <span className="text-stone-600">{t('Photo Document Uploaded', 'Dokumen Bergambar Dimuat Naik')}</span>
                     <span className="text-lime-700 font-medium">✓</span>
                   </div>

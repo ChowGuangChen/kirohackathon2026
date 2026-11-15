@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useViewMode } from '@/app/_lib/useViewMode';
 
 type Props = {
   isMs: boolean;
@@ -10,6 +11,8 @@ type Props = {
 };
 
 export default function SiteHeader({ isMs, onToggleLanguage, children }: Props) {
+  const { setMode } = useViewMode();
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-milk/90 backdrop-blur-md border-b border-stone-200">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
@@ -22,6 +25,12 @@ export default function SiteHeader({ isMs, onToggleLanguage, children }: Props) 
           <span className="text-lg sm:text-xl font-bold text-stone-900">DocuRecover</span>
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            onClick={() => setMode('phone')}
+            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 transition-colors"
+          >
+            📱 {isMs ? 'Paparan Telefon' : 'Phone View'}
+          </button>
           <button
             onClick={onToggleLanguage}
             className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 transition-colors"
