@@ -1,107 +1,116 @@
-# DocuRecover – AI Disaster Document Recovery Assistant
+# DocuRecover – Disaster Document Recovery
 
-An AI-powered platform helping Malaysians recover lost or damaged official documents (MyKad, Passport, Birth Certificate, Driving Licence, Academic Certificates) after floods, fires, and other disasters.
+DocuRecover helps Malaysians recover documents that were lost or damaged in a flood, fire or landslide. Users don't need an account. They fill in a 5-step form, verify their identity with a face scan, and get a tracking ID to follow their request for up to 14 days. The whole app works in English and Bahasa Melayu.
+
+> **Prototype.** Requests are saved in the browser only, and the government checks and delivery updates are simulated. See [Limitations](#limitations).
 
 ## Features
 
-- **AI Document Identification** — Upload a photo of a damaged document; Gemini Vision AI assesses the damage level and identifies the document type.
-- **Recovery Guidance Chatbot** — Ask questions about JPN, JPJ, Immigration, and LPM procedures; the AI responds with verified, source-cited answers.
-- **Personalised Recovery Checklist** — Auto-generated step-by-step tasks tailored to your documents and disaster type.
-- **Document Inventory** — Track the status and recovery progress of each affected document.
-- **Official Resource Directory** — Searchable directory of Malaysian government agencies with contact details.
-- **Bilingual** — Full English and Bahasa Malaysia support.
+- **No sign-up.** Users start the recovery form straight from the home page.
+- **5-step recovery form**
+  1. **Register:** name, IC number, phone, address and email, with mandatory-field rules shown in red.
+  2. **Report:** disaster type and the documents that were lost or damaged (11 types in 3 groups).
+  3. **Verify identity:** upload a document that shows your face (MyKad, passport, licence, OKU card). A live camera scan then has you turn your head left and right, flashes red, green and blue light, and compares your face with the document photo.
+  4. **Confirm:** review everything, then submit. A short loading bar runs while it submits.
+  5. **Track:** shows the tracking ID and what happens next.
+- **Request tracking.** Enter a tracking ID to see the current stage, a timeline, the estimated delivery date and the status of each document. The stages move forward based on how long ago the request was submitted.
+- **EN / BM switch.** The chosen language stays when you move between pages.
 
-## Tech Stack
+### Supported documents
 
-| Layer | Technology |
+| Group | Documents |
 |---|---|
-| Frontend | Next.js 16 + Tailwind CSS 4 |
-| State / Storage | React Context + localStorage |
-| AI Vision | Google Gemini 2.0 Flash (`gemini-2.0-flash`) |
-| AI Chatbot | Google Gemini 2.0 Flash |
-| Deployment | Vercel |
+| Identity & Citizenship (JPN) | MyKad, Birth Certificate, Marriage / Divorce Certificate |
+| Travel & Transport (Immigration & JPJ) | Passport, Driving Licence (LMM), Vehicle Ownership Certificate (Geran) |
+| Property, Education & Finance | Land Title / House Grant, SPM / STPM / University Certificates, OKU Card, Bank Passbook, Insurance Policy Summary |
 
-## Getting Started
+## Tech stack
 
-### 1. Install dependencies
+- [Next.js 16](https://nextjs.org) (App Router, Turbopack) with React 19 and TypeScript
+- [Tailwind CSS 4](https://tailwindcss.com), milk white (`#FBF8EF`) and lime green theme
+- [@vladmandic/face-api](https://github.com/vladmandic/face-api) for face detection, head-turn tracking and face matching, all in the browser
+- Browser `localStorage` for saved requests and the language setting
+
+## Getting started
+
+You need Node.js 20 or newer.
 
 ```bash
 npm install
-```
-
-### 2. Configure environment
-
-Copy `.env.local.example` to `.env.local` and add your Gemini API key:
-
-```bash
-cp .env.local.example .env.local
-```
-
-Then edit `.env.local`:
-
-```
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-
-Get a free key at [Google AI Studio](https://aistudio.google.com/app/apikey).
-
-> **Note:** The app works without an API key — all three AI features fall back to a curated local knowledge base so the demo is fully functional offline.
-
-### 3. Run the development server
-
-```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open http://localhost:3000.
 
-## Demo
+Other commands:
 
-For hackathon evaluators, use the **1-Click Demo Login** button on the sign-in page to skip registration and jump straight to the onboarding flow.
+```bash
+npm run build   # production build
+npm start       # run the production build
+npm run lint    # ESLint
+```
 
-**Recommended demo scenario:**
-1. Sign in → select **Flood** as disaster type → enter a location → select **MyKad** and **Birth Certificate** as affected documents.
-2. Go to **Upload Document** → drag in any photo → click **Identify with AI**.
-3. Open **Recovery Assistant** → ask *"How do I replace my MyKad after a flood?"*
-4. Check **Recovery Plan** → tick off tasks to track progress.
+You don't need any environment variables or API keys. The face models ship with the project in `public/face-models/`.
 
-## Project Structure
+The camera only works on `localhost` or over HTTPS. The browser asks for camera permission when the face scan starts.
+
+> `.env.local.example` and the routes in `app/api/` (which read `GEMINI_API_KEY`) are left over from an earlier version of the app. The current pages don't use them.
+
+## How the face check works
+
+1. **Document photo:** the app finds the face on the uploaded document with SSD MobileNet and turns it into a 128-number face descriptor.
+2. **Live scan:** a lightweight face detector with 68 face points follows the face, measures where the nose sits between the jaw edges to detect left and right head turns, and checks that the face stays in the circle while the screen flashes red, green and blue.
+3. **Match:** the app takes 3 face captures and compares them with the document descriptor. If the closest match is under 0.6 apart (face-api's usual threshold), the faces match. This is shown as at least 40% similarity.
+
+The models (about 12 MB) are served from `public/face-models/`. Photos stay in the browser's memory. They are never uploaded or saved.
+
+## Project structure
 
 ```
 app/
-├── (app)/                  # Authenticated app pages
-│   ├── dashboard/          # Recovery overview
-│   ├── documents/          # Document inventory + upload
-│   ├── assistant/          # AI chatbot
-│   ├── plan/               # Recovery checklist
-│   ├── resources/          # Agency directory
-│   ├── onboarding/         # Disaster case setup
-│   └── settings/           # Account & privacy
-├── (auth)/                 # Login / signup
-├── api/
-│   ├── chat/               # Gemini chatbot route
-│   ├── identify-document/  # Gemini Vision document assessment route
-│   └── generate-checklist/ # Checklist generation route
-├── _components/            # Shared UI components
+├── page.tsx                  Home page
+├── layout.tsx                Root layout and fonts
+├── globals.css               Theme colours and animations
+├── recover/
+│   ├── page.tsx              5-step recovery form
+│   └── FaceScan.tsx          Live camera face scan
+├── track/
+│   ├── page.tsx              Route entry
+│   ├── TrackPageWrapper.tsx  Suspense boundary for URL search params
+│   └── TrackPageClient.tsx   Tracking search and results
+├── _components/
+│   └── SiteHeader.tsx        Shared header with EN/BM switch
 └── _lib/
-    ├── context/            # App-wide state (React Context)
-    ├── data/               # Malaysian document knowledge base
-    ├── hooks/              # useLocalStorage
-    ├── i18n/               # EN/BM translations
-    ├── types/              # TypeScript interfaces
-    └── utils/              # Helper functions
+    ├── documents.ts          Document and disaster lists (EN + BM), request type
+    ├── face.ts               Face model loading and document face extraction
+    └── useLanguage.ts        Saved EN/BM language setting
+public/face-models/           Face detection and recognition models
 ```
 
-## Supported Documents (MVP)
+## Tracking timeline
 
-| Document | Issuing Authority |
+The status is calculated from the submission date:
+
+| Stage | Days after submitting |
 |---|---|
-| MyKad (Identity Card) | JPN |
-| Birth Certificate | JPN |
-| Malaysian Passport | Jabatan Imigresen (JIM) |
-| Driving Licence | JPJ |
-| Academic Certificates (SPM/Degree) | LPM / University |
+| Request received | 0 |
+| Verifying records | 0–2 |
+| Processing & approval | 2–7 |
+| Document printing | 7–10 |
+| Out for delivery | 10–14 |
+| Delivered | 14+ |
 
-## AI Disclaimer
+## Limitations
 
-AI identification and recovery guidance is **preliminary only**. It does not certify document authenticity or determine official eligibility. All procedures must be confirmed at the relevant government agency counter.
+- **Saved in the browser only.** A request can only be tracked in the same browser it was submitted from, and it's lost if site data is cleared.
+- **No real government connection.** The JPN, JPJ and Immigration checks, the processing stages and delivery are simulated.
+- **Basic face check.** The colour flash is a visual step only and doesn't measure light reflected off the face, so it won't catch a printed photo or a screen held up to the camera. Glare on the card or poor lighting lowers the match score.
+- **Name field** accepts letters and spaces only. Names with `/`, `'` or `-` (for example "a/l") can't be typed in yet.
+
+## Next steps for production
+
+- A server API and database for requests
+- Integration with JPN, JPJ and Immigration systems
+- SMS and email status notifications
+- Server-side identity verification with proper liveness (anti-spoofing) checks
+- Secure, encrypted storage for uploaded documents
