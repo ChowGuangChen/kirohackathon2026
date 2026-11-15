@@ -231,7 +231,7 @@ export default function ResourcesPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-16 animate-fadeIn">
+    <div className="space-y-8 max-w-7xl mx-auto pb-16 px-4 sm:px-6 lg:px-8 py-6 animate-fadeIn">
       
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#0A0E1A] border border-white/[0.08] p-6 sm:p-10 shadow-2xl backdrop-blur-xl">

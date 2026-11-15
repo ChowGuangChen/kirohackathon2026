@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useId } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/app/_lib/context/AppContext';
 import { DocumentType, RecoveryTask } from '@/app/_lib/types';
@@ -165,7 +165,7 @@ export default function RecoveryPlanPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto pb-12 animate-fadeIn">
+    <div className="space-y-8 max-w-5xl mx-auto pb-12 px-4 sm:px-6 lg:px-8 py-6 animate-fadeIn">
       
       {/* Header Section with Circular Progress Indicator */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F172A] via-[#1E293B]/80 to-[#0F172A] border border-white/[0.08] p-6 sm:p-8 backdrop-blur-xl shadow-2xl">

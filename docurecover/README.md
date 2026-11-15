@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DocuRecover – AI Disaster Document Recovery Assistant
+
+An AI-powered platform helping Malaysians recover lost or damaged official documents (MyKad, Passport, Birth Certificate, Driving Licence, Academic Certificates) after floods, fires, and other disasters.
+
+## Features
+
+- **AI Document Identification** — Upload a photo of a damaged document; Gemini Vision AI assesses the damage level and identifies the document type.
+- **Recovery Guidance Chatbot** — Ask questions about JPN, JPJ, Immigration, and LPM procedures; the AI responds with verified, source-cited answers.
+- **Personalised Recovery Checklist** — Auto-generated step-by-step tasks tailored to your documents and disaster type.
+- **Document Inventory** — Track the status and recovery progress of each affected document.
+- **Official Resource Directory** — Searchable directory of Malaysian government agencies with contact details.
+- **Bilingual** — Full English and Bahasa Malaysia support.
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 16 + Tailwind CSS 4 |
+| State / Storage | React Context + localStorage |
+| AI Vision | Google Gemini 2.0 Flash (`gemini-2.0-flash`) |
+| AI Chatbot | Google Gemini 2.0 Flash |
+| Deployment | Vercel |
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure environment
+
+Copy `.env.local.example` to `.env.local` and add your Gemini API key:
+
+```bash
+cp .env.local.example .env.local
+```
+
+Then edit `.env.local`:
+
+```
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+Get a free key at [Google AI Studio](https://aistudio.google.com/app/apikey).
+
+> **Note:** The app works without an API key — all three AI features fall back to a curated local knowledge base so the demo is fully functional offline.
+
+### 3. Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Demo
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+For hackathon evaluators, use the **1-Click Demo Login** button on the sign-in page to skip registration and jump straight to the onboarding flow.
 
-## Learn More
+**Recommended demo scenario:**
+1. Sign in → select **Flood** as disaster type → enter a location → select **MyKad** and **Birth Certificate** as affected documents.
+2. Go to **Upload Document** → drag in any photo → click **Identify with AI**.
+3. Open **Recovery Assistant** → ask *"How do I replace my MyKad after a flood?"*
+4. Check **Recovery Plan** → tick off tasks to track progress.
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+app/
+├── (app)/                  # Authenticated app pages
+│   ├── dashboard/          # Recovery overview
+│   ├── documents/          # Document inventory + upload
+│   ├── assistant/          # AI chatbot
+│   ├── plan/               # Recovery checklist
+│   ├── resources/          # Agency directory
+│   ├── onboarding/         # Disaster case setup
+│   └── settings/           # Account & privacy
+├── (auth)/                 # Login / signup
+├── api/
+│   ├── chat/               # Gemini chatbot route
+│   ├── identify-document/  # Gemini Vision document assessment route
+│   └── generate-checklist/ # Checklist generation route
+├── _components/            # Shared UI components
+└── _lib/
+    ├── context/            # App-wide state (React Context)
+    ├── data/               # Malaysian document knowledge base
+    ├── hooks/              # useLocalStorage
+    ├── i18n/               # EN/BM translations
+    ├── types/              # TypeScript interfaces
+    └── utils/              # Helper functions
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Supported Documents (MVP)
 
-## Deploy on Vercel
+| Document | Issuing Authority |
+|---|---|
+| MyKad (Identity Card) | JPN |
+| Birth Certificate | JPN |
+| Malaysian Passport | Jabatan Imigresen (JIM) |
+| Driving Licence | JPJ |
+| Academic Certificates (SPM/Degree) | LPM / University |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## AI Disclaimer
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+AI identification and recovery guidance is **preliminary only**. It does not certify document authenticity or determine official eligibility. All procedures must be confirmed at the relevant government agency counter.

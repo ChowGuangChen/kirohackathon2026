@@ -3,9 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/app/_lib/context/AppContext';
-import { ChatMessage, DocumentType } from '@/app/_lib/types';
-import { getStatusColor, getStatusBg, getDocumentIcon, getDocumentLabel } from '@/app/_lib/utils/documentHelpers';
-import { t } from '@/app/_lib/i18n/translations';
+import { ChatMessage } from '@/app/_lib/types';
+import { getStatusBg, getDocumentIcon, getDocumentLabel } from '@/app/_lib/utils/documentHelpers';
 
 export default function AssistantPage() {
   const {
@@ -105,7 +104,7 @@ export default function AssistantPage() {
       }
 
       const data = await response.json();
-      const replyText = data.content || '';
+      const replyText = data.content || data.response || '';
       const replySources = data.sources || ['JPN', 'JPJ', 'NADMA'];
 
       // Realistic typing streaming effect for smooth readability

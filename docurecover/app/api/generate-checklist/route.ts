@@ -19,6 +19,7 @@ export async function OPTIONS() {
 interface ChecklistRequestBody {
   documentTypes?: string[];
   documentNames?: string[];
+  disasterType?: string;
   language?: string;
 }
 
@@ -41,7 +42,7 @@ interface GeminiChecklistResponse {
 export async function POST(req: NextRequest) {
   try {
     const body: ChecklistRequestBody = await req.json().catch(() => ({}));
-    const { documentTypes = [], documentNames = [], language = 'en' } = body;
+    const { documentTypes = [], documentNames = [], disasterType = 'flood', language = 'en' } = body;
 
     // Normalize types
     const validTypes: DocumentType[] = [
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
 
     const ai = new GoogleGenAI({ apiKey });
 
-    const systemPrompt = `You are an AI disaster recovery coordinator for Malaysia. Generate a structured recovery checklist for a Malaysian disaster victim who needs to recover their lost or damaged official documents.
+    const systemPrompt = `You are an AI disaster recovery coordinator for Malaysia. Generate a structured recovery checklist for a Malaysian disaster victim who has experienced a ${disasterType} disaster and needs to recover their lost or damaged official documents.
 For each document, provide exactly 5 to 6 actionable, practical steps.
 Each step must have: "title", "description", and an optional "link" (use real Malaysian gov portals like www.jpn.gov.my, www.jpj.gov.my, www.imi.gov.my, elpp.moe.gov.my).
 
