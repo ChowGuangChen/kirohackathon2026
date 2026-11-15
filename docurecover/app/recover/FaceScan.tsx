@@ -131,7 +131,7 @@ export default function FaceScan({ isMs, referenceDescriptor, referenceImage, on
       const ctx = canvas.getContext('2d')!;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (!points || phaseRef.current === 'flash') return;
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.9)';
+      ctx.fillStyle = 'rgba(163, 230, 53, 0.95)';
       for (const p of points) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
@@ -304,17 +304,26 @@ export default function FaceScan({ isMs, referenceDescriptor, referenceImage, on
   };
 
   const stepIndex = STEPS.findIndex((s) => s.phase === phase);
-  const ringColor =
-    phase === 'flash' ? 'border-white' : hint ? 'border-amber-400' : phase === 'loading' ? 'border-slate-600' : 'border-emerald-400';
+  const flashing = flashColor !== null;
+  const ringColor = flashing
+    ? 'border-white'
+    : hint
+    ? 'border-amber-400'
+    : phase === 'loading'
+    ? 'border-stone-300'
+    : 'border-lime-500';
+  const primaryButton = 'px-6 py-3 rounded-lg bg-lime-500 hover:bg-lime-400 text-lime-950 font-semibold transition-colors';
+  const secondaryButton =
+    'px-6 py-3 rounded-lg bg-white hover:bg-stone-100 border border-stone-300 text-stone-800 font-semibold transition-colors';
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-center px-6 transition-colors duration-150"
-      style={{ backgroundColor: flashColor ?? '#0A0E1A' }}
+      className="fixed inset-0 z-[60] flex flex-col items-center justify-center px-4 sm:px-6 transition-colors duration-150 overflow-y-auto"
+      style={{ backgroundColor: flashColor ?? '#FBF8EF' }}
     >
       <button
         onClick={onClose}
-        className="absolute top-5 right-5 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white text-xl"
+        className="absolute top-5 right-5 w-10 h-10 rounded-full bg-stone-900/10 hover:bg-stone-900/20 text-stone-800 text-xl"
         aria-label={t('Close', 'Tutup')}
       >
         ×
@@ -323,12 +332,12 @@ export default function FaceScan({ isMs, referenceDescriptor, referenceImage, on
       {phase === 'error' ? (
         <div className="max-w-md text-center">
           <div className="text-5xl mb-4">⚠️</div>
-          <h3 className="text-xl font-bold text-white mb-2">
+          <h3 className="text-xl font-bold text-stone-900 mb-2">
             {errorKind === 'camera'
               ? t('Camera access needed', 'Akses kamera diperlukan')
               : t('Face scanner failed to load', 'Pengimbas wajah gagal dimuatkan')}
           </h3>
-          <p className="text-sm text-slate-400 mb-6">
+          <p className="text-sm text-stone-600 mb-6">
             {errorKind === 'camera'
               ? t(
                   'Allow camera access in your browser settings (the camera icon in the address bar), then try again.',
@@ -336,17 +345,23 @@ export default function FaceScan({ isMs, referenceDescriptor, referenceImage, on
                 )
               : t('Check your connection and try again.', 'Semak sambungan anda dan cuba lagi.')}
           </p>
-          <button onClick={retry} className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold">
+          <button onClick={retry} className={primaryButton}>
             {t('Try again', 'Cuba lagi')}
           </button>
         </div>
       ) : phase === 'result' && result ? (
-        <div className="max-w-md w-full text-center">
-          <div className="text-5xl mb-3">{result.matched ? '✅' : '❌'}</div>
-          <h3 className="text-xl font-bold text-white mb-1">
+        <div className="max-w-md w-full text-center py-8">
+          <div
+            className={`w-14 h-14 mx-auto mb-3 rounded-full flex items-center justify-center text-2xl font-bold ${
+              result.matched ? 'bg-lime-500 text-lime-950' : 'bg-red-100 text-red-600'
+            }`}
+          >
+            {result.matched ? '✓' : '✗'}
+          </div>
+          <h3 className="text-xl font-bold text-stone-900 mb-1">
             {result.matched ? t('Face matched', 'Wajah sepadan') : t('Face does not match', 'Wajah tidak sepadan')}
           </h3>
-          <p className="text-sm text-slate-400 mb-6">
+          <p className="text-sm text-stone-600 mb-6">
             {result.matched
               ? t('Your face matches the photo on your document.', 'Wajah anda sepadan dengan gambar pada dokumen anda.')
               : t(
@@ -357,85 +372,83 @@ export default function FaceScan({ isMs, referenceDescriptor, referenceImage, on
 
           <div className="flex items-center justify-center gap-4 mb-4">
             <div>
-              <img src={referenceImage} alt="" className="w-28 h-28 object-cover rounded-xl border border-white/10" />
-              <div className="text-xs text-slate-400 mt-1">{t('Document', 'Dokumen')}</div>
+              <img src={referenceImage} alt="" className="w-28 h-28 object-cover rounded-xl border border-stone-200" />
+              <div className="text-xs text-stone-500 mt-1">{t('Document', 'Dokumen')}</div>
             </div>
-            <div className="text-2xl text-slate-500">⇄</div>
+            <div className="text-2xl text-stone-400">⇄</div>
             <div>
-              <img src={result.selfie} alt="" className="w-28 h-28 object-cover rounded-xl border border-white/10" />
-              <div className="text-xs text-slate-400 mt-1">{t('Camera', 'Kamera')}</div>
+              <img src={result.selfie} alt="" className="w-28 h-28 object-cover rounded-xl border border-stone-200" />
+              <div className="text-xs text-stone-500 mt-1">{t('Camera', 'Kamera')}</div>
             </div>
           </div>
 
           <div className="mb-6">
-            <div className="flex justify-between text-xs text-slate-400 mb-1">
+            <div className="flex justify-between text-xs text-stone-600 mb-1">
               <span>{t('Similarity', 'Keserupaan')}</span>
-              <span className={result.matched ? 'text-emerald-400' : 'text-red-400'}>{result.similarity}%</span>
+              <span className={`font-semibold ${result.matched ? 'text-lime-700' : 'text-red-600'}`}>{result.similarity}%</span>
             </div>
-            <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-2 bg-stone-200 rounded-full overflow-hidden">
               <div
-                className={`h-full ${result.matched ? 'bg-emerald-500' : 'bg-red-500'}`}
+                className={`h-full ${result.matched ? 'bg-lime-500' : 'bg-red-500'}`}
                 style={{ width: `${result.similarity}%` }}
               />
             </div>
-            <div className="text-[11px] text-slate-500 mt-1">
+            <div className="text-[11px] text-stone-500 mt-1">
               {t('Required to pass', 'Diperlukan untuk lulus')}: {Math.round((1 - MATCH_THRESHOLD) * 100)}%
             </div>
           </div>
 
           {result.matched ? (
-            <button
-              onClick={() => onComplete(result)}
-              className="w-full px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold"
-            >
+            <button onClick={() => onComplete(result)} className={`w-full ${primaryButton}`}>
               {t('Continue', 'Teruskan')}
             </button>
           ) : (
             <div className="flex gap-3">
-              <button onClick={onClose} className="flex-1 px-6 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold">
+              <button onClick={onClose} className={`flex-1 ${secondaryButton}`}>
                 {t('Change document', 'Tukar dokumen')}
               </button>
-              <button onClick={retry} className="flex-1 px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold">
+              <button onClick={retry} className={`flex-1 ${primaryButton}`}>
                 {t('Scan again', 'Imbas semula')}
               </button>
             </div>
           )}
         </div>
       ) : (
-        <div className="w-full max-w-md flex flex-col items-center">
-          <h3 className="text-lg font-semibold text-white mb-1 text-center drop-shadow">
+        <div className="w-full max-w-md flex flex-col items-center py-8">
+          <h3 className={`text-lg font-semibold mb-1 text-center ${flashing ? 'text-white drop-shadow' : 'text-stone-900'}`}>
             {t('Face Verification', 'Pengesahan Wajah')}
           </h3>
-          <p className="text-base text-white/90 mb-6 text-center min-h-[1.5rem] drop-shadow">{instruction[phase]}</p>
+          <p className={`text-base mb-6 text-center min-h-[1.5rem] ${flashing ? 'text-white drop-shadow' : 'text-stone-700'}`}>
+            {instruction[phase]}
+          </p>
 
-          <div className="relative flex items-center justify-center">
+          <div className={`relative w-64 h-64 sm:w-72 sm:h-72 rounded-full overflow-hidden border-4 ${ringColor} bg-stone-900 transition-colors`}>
+            <video
+              ref={videoRef}
+              playsInline
+              muted
+              className="absolute inset-0 w-full h-full object-cover -scale-x-100"
+            />
+            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full object-cover -scale-x-100" />
+            {phase === 'loading' && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-stone-500 border-t-lime-400 rounded-full animate-spin" />
+              </div>
+            )}
+            {phase !== 'loading' && !flashing && (
+              <div className="absolute inset-x-0 h-0.5 bg-lime-400 shadow-[0_0_12px_rgba(163,230,53,0.9)] animate-[scanline_2.4s_ease-in-out_infinite]" />
+            )}
             {phase === 'left' && (
-              <div className="absolute -left-14 text-5xl text-sky-400 animate-pulse">←</div>
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-5xl font-bold text-lime-400 drop-shadow animate-pulse">←</div>
             )}
             {phase === 'right' && (
-              <div className="absolute -right-14 text-5xl text-sky-400 animate-pulse">→</div>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-5xl font-bold text-lime-400 drop-shadow animate-pulse">→</div>
             )}
-
-            <div className={`relative w-64 h-64 sm:w-72 sm:h-72 rounded-full overflow-hidden border-4 ${ringColor} bg-black transition-colors`}>
-              <video
-                ref={videoRef}
-                playsInline
-                muted
-                className="absolute inset-0 w-full h-full object-cover -scale-x-100"
-              />
-              <canvas ref={canvasRef} className="absolute inset-0 w-full h-full object-cover -scale-x-100" />
-              {phase === 'loading' && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-10 h-10 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin" />
-                </div>
-              )}
-              {phase !== 'loading' && phase !== 'flash' && (
-                <div className="absolute inset-x-0 h-0.5 bg-sky-400/70 shadow-[0_0_12px_rgba(56,189,248,0.9)] animate-[scanline_2.4s_ease-in-out_infinite]" />
-              )}
-            </div>
           </div>
 
-          <p className="text-sm text-amber-300 mt-4 min-h-[1.25rem] text-center drop-shadow">{hint ? hintText[hint] : ''}</p>
+          <p className={`text-sm font-medium mt-4 min-h-[1.25rem] text-center ${flashing ? 'text-white drop-shadow' : 'text-amber-700'}`}>
+            {hint ? hintText[hint] : ''}
+          </p>
 
           <div className="flex items-center justify-center gap-1.5 mt-4 flex-wrap">
             {STEPS.map((s, i) => (
@@ -443,10 +456,10 @@ export default function FaceScan({ isMs, referenceDescriptor, referenceImage, on
                 key={s.phase}
                 className={`px-2 py-1 rounded-full text-[11px] font-medium ${
                   i < stepIndex
-                    ? 'bg-emerald-600/80 text-white'
+                    ? 'bg-lime-500 text-lime-950'
                     : i === stepIndex
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-black/40 text-slate-400'
+                    ? 'bg-stone-900 text-white'
+                    : 'bg-stone-200 text-stone-500'
                 }`}
               >
                 {i < stepIndex ? '✓ ' : ''}

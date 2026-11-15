@@ -5,14 +5,13 @@ import TrackPageClient from './TrackPageClient';
 
 export default function TrackPageWrapper() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#0A0E1A] text-slate-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4 animate-pulse">⏳</div>
-          <div className="text-lg text-white font-semibold">Loading...</div>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-milk flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-stone-200 border-t-lime-500 rounded-full animate-spin" />
         </div>
-      </div>
-    }>
+      }
+    >
       <TrackPageClient />
     </Suspense>
   );

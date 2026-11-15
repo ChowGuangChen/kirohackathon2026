@@ -1,82 +1,57 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
+import SiteHeader from '@/app/_components/SiteHeader';
+import { useLanguage } from '@/app/_lib/useLanguage';
+import { DOCUMENT_CATEGORIES } from '@/app/_lib/documents';
+
+const STEPS = [
+  { icon: '📝', titleEn: 'Register Info', titleMs: 'Daftar Maklumat', descEn: 'Name, IC, phone, address, email', descMs: 'Nama, IC, telefon, alamat, emel' },
+  { icon: '⚠️', titleEn: 'Report Disaster', titleMs: 'Lapor Bencana', descEn: 'Type of disaster & documents lost', descMs: 'Jenis bencana & dokumen hilang' },
+  { icon: '🪪', titleEn: 'Verify Identity', titleMs: 'Sahkan Identiti', descEn: 'Photo document & live face match', descMs: 'Dokumen bergambar & padanan wajah' },
+  { icon: '✓', titleEn: 'Confirm', titleMs: 'Sahkan', descEn: 'Review and submit your request', descMs: 'Semak dan hantar permohonan' },
+  { icon: '📦', titleEn: 'Track Delivery', titleMs: 'Jejak Penghantaran', descEn: 'Follow progress for up to 14 days', descMs: 'Pantau kemajuan sehingga 14 hari' },
+];
 
 export default function HomePage() {
-  const [language, setLanguage] = useState<'en' | 'ms'>('en');
-  const isMs = language === 'ms';
-
-  const toggleLanguage = () => {
-    setLanguage(language === 'en' ? 'ms' : 'en');
-  };
+  const { isMs, toggleLanguage } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-[#0A0E1A] text-slate-100">
-      
-      {/* Simple Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0A0E1A]/90 backdrop-blur-md border-b border-white/[0.08]">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center">
-              <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold text-white">DocuRecover</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={toggleLanguage}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors border border-white/10"
-            >
-              {isMs ? 'EN' : 'BM'}
-            </button>
-            <Link
-              href="/track"
-              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
-            >
-              {isMs ? 'Jejak Status' : 'Track Status'}
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-milk text-stone-900">
+      <SiteHeader isMs={isMs} onToggleLanguage={toggleLanguage}>
+        <Link
+          href="/track"
+          className="px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold text-stone-700 hover:text-stone-900 hover:bg-stone-100 transition-colors"
+        >
+          {isMs ? 'Jejak Status' : 'Track Status'}
+        </Link>
+      </SiteHeader>
 
-      {/* Hero Section */}
       <section className="pt-32 pb-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-semibold mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-100 border border-lime-300 text-lime-800 text-xs font-semibold mb-6">
             <span>🇲🇾</span>
             <span>{isMs ? 'Pemulihan Dokumen Bencana Malaysia' : 'Malaysia Disaster Document Recovery'}</span>
           </div>
-          
-          <h1 className="text-5xl font-bold text-white mb-4 leading-tight">
-            {isMs ? (
-              <>
-                Pulihkan Dokumen Yang Hilang<br />
-                <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                  Atau Rosak Selepas Bencana
-                </span>
-              </>
-            ) : (
-              <>
-                Recover Lost or Damaged<br />
-                <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                  Documents After Disaster
-                </span>
-              </>
-            )}
+
+          <h1 className="text-4xl sm:text-5xl font-bold text-stone-900 mb-4 leading-tight">
+            {isMs ? 'Pulihkan Dokumen Yang Hilang' : 'Recover Lost or Damaged'}
+            <br />
+            <span className="text-lime-600">
+              {isMs ? 'Atau Rosak Selepas Bencana' : 'Documents After Disaster'}
+            </span>
           </h1>
-          
-          <p className="text-lg text-slate-400 mb-8">
-            {isMs 
-              ? 'Proses 5 langkah mudah untuk memulihkan MyKad, Pasport, Sijil Kelahiran, dan Lesen Memandu anda'
-              : 'Simple 5-step process to recover your MyKad, Passport, Birth Certificate, and Driving License'}
+
+          <p className="text-lg text-stone-600 mb-8">
+            {isMs
+              ? 'Proses 5 langkah mudah untuk memulihkan MyKad, Pasport, Sijil Kelahiran, Lesen Memandu dan dokumen penting lain'
+              : 'A simple 5-step process to recover your MyKad, Passport, Birth Certificate, Driving Licence and other important documents'}
           </p>
 
           <Link
             href="/recover"
-            className="inline-flex items-center px-8 py-4 rounded-xl text-base font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/30 transition-all"
+            className="inline-flex items-center px-8 py-4 rounded-xl text-base font-semibold text-lime-950 bg-lime-500 hover:bg-lime-400 shadow-md shadow-lime-500/30 transition-colors"
           >
             {isMs ? 'Mula Proses Pemulihan' : 'Start Recovery Process'}
             <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -86,168 +61,86 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-20 px-6 bg-white/[0.02]">
+      <section className="py-20 px-6 bg-milk-dark">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
+          <h2 className="text-3xl font-bold text-stone-900 text-center mb-12">
             {isMs ? 'Bagaimana Ia Berfungsi' : 'How It Works'}
           </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            {[
-              {
-                step: '1',
-                titleEn: 'Register Info',
-                titleMs: 'Daftar Maklumat',
-                descEn: 'Name, IC, phone, address, email',
-                descMs: 'Nama, IC, telefon, alamat, emel',
-                icon: '📝'
-              },
-              {
-                step: '2',
-                titleEn: 'Report Disaster',
-                titleMs: 'Lapor Bencana',
-                descEn: 'Type of disaster & documents lost',
-                descMs: 'Jenis bencana & dokumen hilang',
-                icon: '⚠️'
-              },
-              {
-                step: '3',
-                titleEn: 'Upload Proof',
-                titleMs: 'Muat Naik Bukti',
-                descEn: 'Photo evidence & face verification',
-                descMs: 'Bukti foto & pengesahan wajah',
-                icon: '📸'
-              },
-              {
-                step: '4',
-                titleEn: 'Confirmation',
-                titleMs: 'Pengesahan',
-                descEn: 'System retrieves & confirms records',
-                descMs: 'Sistem ambil & sahkan rekod',
-                icon: '✓'
-              },
-              {
-                step: '5',
-                titleEn: 'Track Delivery',
-                titleMs: 'Jejak Penghantaran',
-                descEn: '14-day tracking of new documents',
-                descMs: 'Jejak 14 hari dokumen baharu',
-                icon: '📦'
-              }
-            ].map((item) => (
-              <div key={item.step} className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-3xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
+            {STEPS.map((item, i) => (
+              <div key={item.titleEn} className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-white border border-stone-200 flex items-center justify-center text-3xl">
                   {item.icon}
                 </div>
-                <div className="text-sm font-bold text-blue-400 mb-2">
-                  {isMs ? 'Langkah' : 'Step'} {item.step}
+                <div className="text-sm font-bold text-lime-700 mb-2">
+                  {isMs ? 'Langkah' : 'Step'} {i + 1}
                 </div>
-                <h3 className="text-base font-semibold text-white mb-1">
-                  {isMs ? item.titleMs : item.titleEn}
-                </h3>
-                <p className="text-xs text-slate-400">
-                  {isMs ? item.descMs : item.descEn}
-                </p>
+                <h3 className="text-base font-semibold text-stone-900 mb-1">{isMs ? item.titleMs : item.titleEn}</h3>
+                <p className="text-xs text-stone-600">{isMs ? item.descMs : item.descEn}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Supported Documents */}
       <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-4">Supported Documents</h2>
-          <p className="text-center text-slate-400 text-sm mb-12 max-w-2xl mx-auto">
-            Comprehensive document recovery for all essential Malaysian identification, property, and financial records
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl font-bold text-stone-900 text-center mb-4">
+            {isMs ? 'Dokumen Yang Disokong' : 'Supported Documents'}
+          </h2>
+          <p className="text-center text-stone-600 text-sm mb-12 max-w-2xl mx-auto">
+            {isMs
+              ? 'Pemulihan untuk dokumen pengenalan, hartanah, pendidikan dan kewangan yang penting di Malaysia'
+              : 'Recovery for essential Malaysian identity, property, education and financial documents'}
           </p>
-          
-          {/* Identity & Citizenship */}
-          <div className="mb-10">
-            <h3 className="text-lg font-semibold text-blue-400 mb-4 flex items-center">
-              <span className="mr-2">🪪</span> Identity & Citizenship (JPN)
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { icon: '🪪', name: 'MyKad (Identity Card)', agency: 'JPN' },
-                { icon: '📜', name: 'Birth Certificate', agency: 'JPN' },
-                { icon: '💍', name: 'Marriage / Divorce Certificate', agency: 'JPN' }
-              ].map((doc) => (
-                <div key={doc.name} className="p-5 rounded-xl bg-[#111827] border border-white/10 hover:border-blue-500/40 transition-all">
-                  <div className="text-3xl mb-2">{doc.icon}</div>
-                  <h4 className="text-sm font-semibold text-white mb-1">{doc.name}</h4>
-                  <p className="text-xs text-slate-400">{doc.agency}</p>
-                </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Travel & Transport */}
-          <div className="mb-10">
-            <h3 className="text-lg font-semibold text-sky-400 mb-4 flex items-center">
-              <span className="mr-2">🚗</span> Travel & Transport (Immigration & JPJ)
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { icon: '🛂', name: 'Malaysian Passport', agency: 'Immigration' },
-                { icon: '🚗', name: 'Driving License (LMM)', agency: 'JPJ' },
-                { icon: '📄', name: 'Vehicle Ownership (Geran)', agency: 'JPJ' }
-              ].map((doc) => (
-                <div key={doc.name} className="p-5 rounded-xl bg-[#111827] border border-white/10 hover:border-blue-500/40 transition-all">
-                  <div className="text-3xl mb-2">{doc.icon}</div>
-                  <h4 className="text-sm font-semibold text-white mb-1">{doc.name}</h4>
-                  <p className="text-xs text-slate-400">{doc.agency}</p>
-                </div>
-              ))}
+          {DOCUMENT_CATEGORIES.map((category) => (
+            <div key={category.id} className="mb-10 last:mb-0">
+              <h3 className="text-lg font-semibold text-stone-800 mb-4 flex items-center">
+                <span className="mr-2">{category.icon}</span>
+                {isMs ? category.ms : category.en}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {category.documents.map((doc) => (
+                  <div
+                    key={doc.value}
+                    className="p-5 rounded-xl bg-white border border-stone-200 hover:border-lime-400 transition-colors"
+                  >
+                    <div className="text-3xl mb-2">{doc.icon}</div>
+                    <h4 className="text-sm font-semibold text-stone-900 mb-1">{isMs ? doc.ms : doc.en}</h4>
+                    <p className="text-xs text-stone-500">{isMs ? doc.agencyMs : doc.agencyEn}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-
-          {/* Property, Education & Finance */}
-          <div>
-            <h3 className="text-lg font-semibold text-emerald-400 mb-4 flex items-center">
-              <span className="mr-2">🏠</span> Property, Education & Finance
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { icon: '🏠', name: 'Land Title / House Grant', agency: 'Land Office' },
-                { icon: '🎓', name: 'SPM / University Certificates', agency: 'Education' },
-                { icon: '♿', name: 'OKU Card (Disability)', agency: 'JKM' },
-                { icon: '🏦', name: 'Bank Passbook', agency: 'Banks' },
-                { icon: '📋', name: 'Insurance Policy Summary', agency: 'Insurance' }
-              ].map((doc) => (
-                <div key={doc.name} className="p-5 rounded-xl bg-[#111827] border border-white/10 hover:border-blue-500/40 transition-all">
-                  <div className="text-3xl mb-2">{doc.icon}</div>
-                  <h4 className="text-sm font-semibold text-white mb-1">{doc.name}</h4>
-                  <p className="text-xs text-slate-400">{doc.agency}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* CTA */}
       <section className="py-16 px-6">
-        <div className="max-w-3xl mx-auto text-center p-8 rounded-2xl bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/30">
-          <h2 className="text-2xl font-bold text-white mb-3">Ready to Recover Your Documents?</h2>
-          <p className="text-sm text-slate-300 mb-6">No signup required. Start your recovery process immediately.</p>
+        <div className="max-w-3xl mx-auto text-center p-8 rounded-2xl bg-lime-100 border border-lime-300">
+          <h2 className="text-2xl font-bold text-stone-900 mb-3">
+            {isMs ? 'Sedia Untuk Memulihkan Dokumen Anda?' : 'Ready to Recover Your Documents?'}
+          </h2>
+          <p className="text-sm text-stone-700 mb-6">
+            {isMs
+              ? 'Tiada pendaftaran akaun diperlukan. Mulakan proses pemulihan sekarang.'
+              : 'No account needed. Start your recovery process right away.'}
+          </p>
           <Link
             href="/recover"
-            className="inline-flex items-center px-6 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-all"
+            className="inline-flex items-center px-6 py-3 rounded-lg text-sm font-semibold text-lime-950 bg-lime-500 hover:bg-lime-400 transition-colors"
           >
-            Start Now
+            {isMs ? 'Mula Sekarang' : 'Start Now'}
           </Link>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 px-6 border-t border-white/[0.08]">
-        <div className="max-w-6xl mx-auto text-center text-sm text-slate-400">
-          <p>© 2024 DocuRecover • Malaysia Disaster Relief Initiative</p>
+      <footer className="py-8 px-6 border-t border-stone-200">
+        <div className="max-w-5xl mx-auto text-center text-sm text-stone-500">
+          <p>DocuRecover • {isMs ? 'Inisiatif Bantuan Bencana Malaysia' : 'Malaysia Disaster Relief Initiative'}</p>
         </div>
       </footer>
-
     </div>
   );
 }

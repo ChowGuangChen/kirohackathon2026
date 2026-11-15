@@ -15,8 +15,8 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: 'DocuRecover – AI Document Recovery Assistant',
-  description: 'AI-powered disaster document recovery platform for Malaysia',
+  title: 'DocuRecover – Disaster Document Recovery',
+  description: 'Recover lost or damaged Malaysian documents after a disaster',
   keywords: [
     'Malaysia disaster recovery',
     'lost MyKad replacement',
@@ -34,9 +34,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${outfit.variable} dark`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${inter.variable} ${outfit.variable}`}>
       <body
-        className={`${inter.className} min-h-screen bg-[#0A0E1A] text-[#F1F5F9] antialiased selection:bg-blue-600 selection:text-white`}
+        className={`${inter.className} min-h-screen bg-milk text-stone-900 antialiased selection:bg-lime-300 selection:text-lime-950`}
       >
         {children}
       </body>
