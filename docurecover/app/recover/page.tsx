@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import FaceScan, { type FaceScanResult } from './FaceScan';
+import { extractDocumentFace, type DocumentFace } from '@/app/_lib/face';
 
 type DisasterType = 'flood' | 'fire' | 'landslide' | 'other';
 type DocumentType = 
@@ -21,6 +23,10 @@ export default function RecoverPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [language, setLanguage] = useState<'en' | 'ms'>('en');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [docFace, setDocFace] = useState<DocumentFace | null>(null);
+  const [docStatus, setDocStatus] = useState<'idle' | 'processing' | 'found' | 'noFace' | 'error'>('idle');
+  const [showFaceScan, setShowFaceScan] = useState(false);
+  const [faceResult, setFaceResult] = useState<FaceScanResult | null>(null);
   const isMs = language === 'ms';
   
   const [formData, setFormData] = useState({
@@ -103,29 +109,42 @@ export default function RecoverPage() {
       confirmed: false,
       trackingId: ''
     });
+    if (docFace) URL.revokeObjectURL(docFace.previewUrl);
+    setDocFace(null);
+    setDocStatus('idle');
+    setFaceResult(null);
     setCurrentStep(1);
   };
 
-  const handleCameraAccess = async () => {
+  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (docFace) URL.revokeObjectURL(docFace.previewUrl);
+    setDocFace(null);
+    setFaceResult(null);
+    setFormData((prev) => ({ ...prev, proofUploaded: false, faceVerified: false }));
+    setDocStatus('processing');
+
     try {
-      // Request camera permission
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      
-      // Permission granted - simulate taking photo
-      setTimeout(() => {
-        // Stop the camera
-        stream.getTracks().forEach(track => track.stop());
-        // Mark as verified
-        setFormData({ ...formData, faceVerified: true });
-      }, 1500);
-      
-    } catch (error) {
-      // Permission denied or error
-      alert(isMs 
-        ? 'Akses kamera diperlukan untuk pengesahan wajah. Sila benarkan akses kamera dalam tetapan pelayar anda.'
-        : 'Camera access is required for face verification. Please allow camera access in your browser settings.'
-      );
+      const face = await extractDocumentFace(file);
+      if (!face) {
+        setDocStatus('noFace');
+        return;
+      }
+      setDocFace(face);
+      setDocStatus('found');
+      setFormData((prev) => ({ ...prev, proofUploaded: true }));
+    } catch {
+      setDocStatus('error');
     }
+  };
+
+  const handleFaceScanComplete = (result: FaceScanResult) => {
+    setFaceResult(result);
+    setShowFaceScan(false);
+    setFormData((prev) => ({ ...prev, faceVerified: result.matched }));
   };
 
   const toggleDocument = (doc: DocumentType) => {
@@ -461,59 +480,134 @@ export default function RecoverPage() {
                   {isMs ? 'Muat Naik Bukti & Pengesahan' : 'Upload Proof & Verification'}
                 </h2>
                 <p className="text-sm text-slate-400">
-                  {isMs ? 'Muat naik bukti dokumen rosak dan sahkan identiti anda' : 'Upload evidence of damaged documents and verify your identity'}
+                  {isMs
+                    ? 'Muat naik dokumen yang mempunyai gambar wajah anda, kemudian imbas wajah anda untuk dibandingkan'
+                    : 'Upload a document that shows your face photo, then scan your face so we can compare them'}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-3">
-                  {isMs ? 'Muat Naik Bukti Dokumen Hilang/Rosak' : 'Upload Proof of Damaged/Lost Documents'}
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  {isMs ? '1. Dokumen Dengan Gambar Wajah' : '1. Document With Your Face Photo'}
                 </label>
-                <div className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center hover:border-blue-500/50 transition-all cursor-pointer">
+                <p className="text-xs text-slate-400 mb-3">
+                  {isMs
+                    ? 'Contoh: MyKad, pasport, lesen memandu atau kad OKU. Gambar rosak juga boleh jika wajah masih jelas.'
+                    : 'For example MyKad, passport, driving licence or OKU card. A damaged copy is fine if the face is still clear.'}
+                </p>
+                <div className="border-2 border-dashed border-white/20 rounded-lg p-6 text-center hover:border-blue-500/50 transition-all">
                   <input
                     type="file"
                     accept="image/*"
-                    multiple
-                    onChange={() => setFormData({ ...formData, proofUploaded: true })}
+                    onChange={handleDocumentUpload}
+                    disabled={docStatus === 'processing'}
                     className="hidden"
                     id="proof-upload"
                   />
-                  <label htmlFor="proof-upload" className="cursor-pointer">
-                    <div className="text-4xl mb-2">📸</div>
-                    <div className="text-sm font-medium text-white mb-1">
-                      {isMs ? 'Klik untuk muat naik foto' : 'Click to upload photos'}
+
+                  {docStatus === 'processing' ? (
+                    <div className="py-4">
+                      <div className="w-8 h-8 mx-auto mb-3 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin" />
+                      <div className="text-sm text-slate-300">
+                        {isMs ? 'Mencari wajah pada dokumen...' : 'Looking for a face on the document...'}
+                      </div>
                     </div>
-                    <div className="text-xs text-slate-400">PNG, JPG {isMs ? 'sehingga' : 'up to'} 10MB {isMs ? 'setiap satu' : 'each'}</div>
-                  </label>
-                  {formData.proofUploaded && (
-                    <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-sm">
-                      <span className="mr-1">✓</span> {isMs ? 'Fail dimuat naik' : 'Files uploaded'}
+                  ) : docFace ? (
+                    <div className="flex items-center gap-4 text-left">
+                      <img src={docFace.previewUrl} alt="" className="w-28 h-20 object-cover rounded-lg border border-white/10" />
+                      <img src={docFace.faceImage} alt="" className="w-16 h-20 object-cover rounded-lg border-2 border-emerald-500" />
+                      <div className="flex-1">
+                        <div className="text-sm text-emerald-400 font-medium">
+                          ✓ {isMs ? 'Wajah dikesan pada dokumen' : 'Face found on document'}
+                        </div>
+                        <label htmlFor="proof-upload" className="text-xs text-blue-400 hover:text-blue-300 cursor-pointer">
+                          {isMs ? 'Tukar dokumen' : 'Change document'}
+                        </label>
+                      </div>
                     </div>
+                  ) : (
+                    <label htmlFor="proof-upload" className="cursor-pointer block">
+                      <div className="text-4xl mb-2">🪪</div>
+                      <div className="text-sm font-medium text-white mb-1">
+                        {isMs ? 'Klik untuk muat naik gambar dokumen' : 'Click to upload a photo of the document'}
+                      </div>
+                      <div className="text-xs text-slate-400">PNG, JPG</div>
+                      {docStatus === 'noFace' && (
+                        <div className="mt-3 text-xs text-red-400">
+                          {isMs
+                            ? 'Tiada wajah dikesan. Muat naik gambar yang lebih jelas di mana gambar wajah kelihatan.'
+                            : 'No face found. Upload a clearer photo where the face picture is visible.'}
+                        </div>
+                      )}
+                      {docStatus === 'error' && (
+                        <div className="mt-3 text-xs text-red-400">
+                          {isMs
+                            ? 'Pengimbas wajah gagal dimuatkan. Semak sambungan anda dan cuba lagi.'
+                            : 'The face scanner failed to load. Check your connection and try again.'}
+                        </div>
+                      )}
+                    </label>
                   )}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-3">
-                  {isMs ? 'Pengesahan Wajah' : 'Face Verification'}
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  {isMs ? '2. Pengesahan Wajah' : '2. Face Verification'}
                 </label>
-                <div className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center hover:border-blue-500/50 transition-all">
-                  <div className="text-4xl mb-2">📷</div>
-                  <div className="text-sm font-medium text-white mb-1">
-                    {isMs ? 'Sahkan Identiti Anda' : 'Verify Your Identity'}
-                  </div>
-                  <div className="text-xs text-slate-400 mb-4">
-                    {isMs ? 'Ambil gambar selfie untuk mengesahkan identiti' : 'Take a selfie to confirm your identity'}
-                  </div>
-                  <button
-                    onClick={handleCameraAccess}
-                    disabled={formData.faceVerified}
-                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-green-600 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all"
-                  >
-                    {formData.faceVerified ? (isMs ? '✓ Disahkan' : '✓ Verified') : (isMs ? 'Mula Kamera' : 'Start Camera')}
-                  </button>
+                <p className="text-xs text-slate-400 mb-3">
+                  {isMs
+                    ? 'Anda akan diminta memusingkan kepala ke kiri dan kanan, kemudian skrin akan berkelip merah, hijau dan biru.'
+                    : 'You will be asked to turn your head left and right, then the screen will flash red, green and blue.'}
+                </p>
+                <div className="border-2 border-dashed border-white/20 rounded-lg p-6 text-center">
+                  {faceResult ? (
+                    <div className="flex items-center gap-4 text-left">
+                      <img src={docFace?.faceImage} alt="" className="w-16 h-20 object-cover rounded-lg border border-white/10" />
+                      <span className="text-slate-500">⇄</span>
+                      <img src={faceResult.selfie} alt="" className="w-16 h-20 object-cover rounded-lg border border-white/10" />
+                      <div className="flex-1">
+                        <div className={`text-sm font-medium ${faceResult.matched ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {faceResult.matched
+                            ? `✓ ${isMs ? 'Wajah sepadan' : 'Face matched'} (${faceResult.similarity}%)`
+                            : `✗ ${isMs ? 'Tidak sepadan' : 'No match'} (${faceResult.similarity}%)`}
+                        </div>
+                        {!faceResult.matched && (
+                          <button onClick={() => setShowFaceScan(true)} className="text-xs text-blue-400 hover:text-blue-300">
+                            {isMs ? 'Imbas semula' : 'Scan again'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="text-4xl mb-2">📷</div>
+                      <div className="text-xs text-slate-400 mb-4">
+                        {docFace
+                          ? isMs ? 'Kamera akan meminta kebenaran anda' : 'Your browser will ask for camera permission'
+                          : isMs ? 'Muat naik dokumen dahulu' : 'Upload your document first'}
+                      </div>
+                      <button
+                        onClick={() => setShowFaceScan(true)}
+                        disabled={!docFace}
+                        className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all"
+                      >
+                        {isMs ? 'Mula Imbasan Wajah' : 'Start Face Scan'}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
+
+              {showFaceScan && docFace && (
+                <FaceScan
+                  isMs={isMs}
+                  referenceDescriptor={docFace.descriptor}
+                  referenceImage={docFace.faceImage}
+                  onComplete={handleFaceScanComplete}
+                  onClose={() => setShowFaceScan(false)}
+                />
+              )}
 
               <div className="flex space-x-3">
                 <button
@@ -591,12 +685,12 @@ export default function RecoverPage() {
 
                 <div className="border-t border-white/10 pt-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-400">{isMs ? 'Bukti Dimuat Naik' : 'Proof Uploaded'}</span>
+                    <span className="text-slate-400">{isMs ? 'Dokumen Bergambar Dimuat Naik' : 'Photo Document Uploaded'}</span>
                     <span className="text-green-400">✓</span>
                   </div>
                   <div className="flex items-center justify-between text-sm mt-2">
-                    <span className="text-slate-400">{isMs ? 'Wajah Disahkan' : 'Face Verified'}</span>
-                    <span className="text-green-400">✓</span>
+                    <span className="text-slate-400">{isMs ? 'Wajah Sepadan Dengan Dokumen' : 'Face Matches Document'}</span>
+                    <span className="text-green-400">✓ {faceResult?.similarity}%</span>
                   </div>
                 </div>
               </div>
