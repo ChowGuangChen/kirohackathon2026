@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 type StatusStep = {
   step: number;
   title: string;
+  titleMs: string;
   date: string;
   status: 'completed' | 'current' | 'pending';
 };
@@ -15,63 +16,173 @@ export default function TrackPage() {
   const searchParams = useSearchParams();
   const [trackingId, setTrackingId] = useState('');
   const [showResults, setShowResults] = useState(false);
+  const [language, setLanguage] = useState<'en' | 'ms'>('en');
+  const [requestData, setRequestData] = useState<any>(null);
+  const [notFound, setNotFound] = useState(false);
+  const isMs = language === 'ms';
+
+  // Get current date and calculate dates
+  const getCurrentDate = () => new Date();
+  const formatDate = (date: Date) => {
+    const options: Intl.DateTimeFormatOptions = { 
+      day: 'numeric', 
+      month: 'short', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return date.toLocaleDateString('en-MY', options);
+  };
+  
+  const formatDateShort = (date: Date) => {
+    const options: Intl.DateTimeFormatOptions = { 
+      day: 'numeric', 
+      month: 'short', 
+      year: 'numeric'
+    };
+    return date.toLocaleDateString('en-MY', options);
+  };
+
+  const addDays = (date: Date, days: number) => {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+  };
+
+  // Get dates from stored request or use current date
+  const getRequestDate = () => {
+    if (requestData?.submissionDate) {
+      return new Date(requestData.submissionDate);
+    }
+    return getCurrentDate();
+  };
+
+  const requestDate = getRequestDate();
+  const verificationDate = addDays(requestDate, 1);
+  const estimatedDeliveryDate = addDays(requestDate, 14);
+  
+  const calculateDaysRemaining = () => {
+    const today = getCurrentDate();
+    const delivery = estimatedDeliveryDate;
+    const diffTime = delivery.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'en' ? 'ms' : 'en');
+  };
 
   useEffect(() => {
     const id = searchParams.get('id');
     if (id) {
       setTrackingId(id);
-      setShowResults(true);
+      loadRequestData(id);
     }
   }, [searchParams]);
+
+  const loadRequestData = (id: string) => {
+    // Try to load from localStorage
+    const storedData = localStorage.getItem(`request_${id}`);
+    if (storedData) {
+      const data = JSON.parse(storedData);
+      setRequestData(data);
+      setShowResults(true);
+      setNotFound(false);
+    } else {
+      // Tracking ID not found
+      setRequestData(null);
+      setShowResults(true);
+      setNotFound(true);
+    }
+  };
 
   const handleTrack = (e: React.FormEvent) => {
     e.preventDefault();
     if (trackingId) {
-      setShowResults(true);
+      loadRequestData(trackingId);
     }
   };
 
-  // Mock status data
+  // Status data with actual dates
   const statusSteps: StatusStep[] = [
     {
       step: 1,
       title: 'Request Received',
-      date: '15 Dec 2024, 10:30 AM',
+      titleMs: 'Permohonan Diterima',
+      date: formatDate(requestDate),
       status: 'completed'
     },
     {
       step: 2,
       title: 'Verifying Records with Government Database',
-      date: '16 Dec 2024, 2:15 PM',
+      titleMs: 'Mengesahkan Rekod dengan Pangkalan Data Kerajaan',
+      date: formatDate(verificationDate),
       status: 'completed'
     },
     {
       step: 3,
       title: 'Processing & Approval',
-      date: 'In Progress',
+      titleMs: 'Pemprosesan & Kelulusan',
+      date: isMs ? 'Sedang Diproses' : 'In Progress',
       status: 'current'
     },
     {
       step: 4,
       title: 'Document Printing',
-      date: 'Pending',
+      titleMs: 'Pencetakan Dokumen',
+      date: isMs ? 'Menunggu' : 'Pending',
       status: 'pending'
     },
     {
       step: 5,
       title: 'Out for Delivery',
-      date: 'Pending',
+      titleMs: 'Dalam Penghantaran',
+      date: isMs ? 'Menunggu' : 'Pending',
       status: 'pending'
     }
   ];
 
-  const documentsRequested = [
-    { name: 'MyKad (Identity Card)', agency: 'JPN', status: 'Processing' },
-    { name: 'Driving License', agency: 'JPJ', status: 'Processing' }
-  ];
+  // Get documents from stored request
+  const getDocumentsRequested = () => {
+    if (!requestData?.documentsLost) {
+      return [
+        { 
+          name: 'MyKad (Identity Card)', 
+          nameMs: 'MyKad (Kad Pengenalan)',
+          agency: 'JPN', 
+          status: 'Processing',
+          statusMs: 'Memproses'
+        }
+      ];
+    }
 
-  const estimatedDelivery = '28 Dec 2024';
-  const daysRemaining = 13;
+    const docNames: Record<string, { name: string; nameMs: string; agency: string }> = {
+      'mykad': { name: 'MyKad (Identity Card)', nameMs: 'MyKad (Kad Pengenalan)', agency: 'JPN' },
+      'birth-cert': { name: 'Birth Certificate', nameMs: 'Sijil Kelahiran', agency: 'JPN' },
+      'marriage-cert': { name: 'Marriage / Divorce Certificate', nameMs: 'Sijil Perkahwinan / Perceraian', agency: 'JPN' },
+      'passport': { name: 'Malaysian Passport', nameMs: 'Pasport Malaysia', agency: 'Immigration' },
+      'driving-license': { name: 'Driving License', nameMs: 'Lesen Memandu', agency: 'JPJ' },
+      'vehicle-grant': { name: 'Vehicle Ownership Certificate', nameMs: 'Geran Kenderaan', agency: 'JPJ' },
+      'land-title': { name: 'Land Title / House Grant', nameMs: 'Geran Tanah / Rumah', agency: 'Land Office' },
+      'academic-cert': { name: 'Academic Certificates', nameMs: 'Sijil Akademik', agency: 'Education' },
+      'oku-card': { name: 'OKU Card', nameMs: 'Kad OKU', agency: 'JKM' },
+      'bank-passbook': { name: 'Bank Passbook', nameMs: 'Buku Bank', agency: 'Bank' },
+      'insurance-policy': { name: 'Insurance Policy', nameMs: 'Polisi Insurans', agency: 'Insurance' }
+    };
+
+    return requestData.documentsLost.map((doc: string) => ({
+      name: docNames[doc]?.name || doc,
+      nameMs: docNames[doc]?.nameMs || doc,
+      agency: docNames[doc]?.agency || 'N/A',
+      status: 'Processing',
+      statusMs: 'Memproses'
+    }));
+  };
+
+  const documentsRequested = getDocumentsRequested();
+
+  const daysRemaining = calculateDaysRemaining();
 
   return (
     <div className="min-h-screen bg-[#0A0E1A] text-slate-100">
@@ -87,9 +198,17 @@ export default function TrackPage() {
             </div>
             <span className="text-xl font-bold text-white">DocuRecover</span>
           </Link>
-          <Link href="/" className="text-sm text-slate-400 hover:text-white transition-colors">
-            Home
-          </Link>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={toggleLanguage}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors border border-white/10"
+            >
+              {isMs ? 'EN' : 'BM'}
+            </button>
+            <Link href="/" className="text-sm text-slate-400 hover:text-white transition-colors">
+              {isMs ? 'Utama' : 'Home'}
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -101,13 +220,21 @@ export default function TrackPage() {
             // Tracking Form
             <div className="space-y-6">
               <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-white mb-2">Track Your Request</h1>
-                <p className="text-sm text-slate-400">Enter your tracking ID to check the status of your document recovery</p>
+                <h1 className="text-3xl font-bold text-white mb-2">
+                  {isMs ? 'Jejak Permohonan Anda' : 'Track Your Request'}
+                </h1>
+                <p className="text-sm text-slate-400">
+                  {isMs 
+                    ? 'Masukkan ID penjejakan anda untuk menyemak status pemulihan dokumen'
+                    : 'Enter your tracking ID to check the status of your document recovery'}
+                </p>
               </div>
 
               <form onSubmit={handleTrack} className="max-w-md mx-auto space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Tracking ID</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    {isMs ? 'ID Penjejakan' : 'Tracking ID'}
+                  </label>
                   <input
                     type="text"
                     value={trackingId}
@@ -115,7 +242,9 @@ export default function TrackPage() {
                     className="w-full px-4 py-3 rounded-lg bg-[#111827] border border-white/10 text-white font-mono text-center text-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                     placeholder="DRXXXXXXXXXX"
                   />
-                  <div className="text-xs text-slate-400 mt-2">Format: DR followed by 10-12 characters</div>
+                  <div className="text-xs text-slate-400 mt-2">
+                    {isMs ? 'Format: DR diikuti 10-12 aksara' : 'Format: DR followed by 10-12 characters'}
+                  </div>
                 </div>
 
                 <button
@@ -123,14 +252,58 @@ export default function TrackPage() {
                   disabled={!trackingId}
                   className="w-full px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-semibold transition-all"
                 >
-                  Track Status
+                  {isMs ? 'Jejak Status' : 'Track Status'}
                 </button>
               </form>
 
               <div className="mt-8 text-center">
-                <p className="text-xs text-slate-400 mb-2">Don't have a tracking ID?</p>
+                <p className="text-xs text-slate-400 mb-2">
+                  {isMs ? 'Tiada ID penjejakan?' : "Don't have a tracking ID?"}
+                </p>
                 <Link href="/recover" className="text-sm text-blue-400 hover:text-blue-300 font-medium">
-                  Start a new recovery request →
+                  {isMs ? 'Mula permohonan pemulihan baharu →' : 'Start a new recovery request →'}
+                </Link>
+              </div>
+            </div>
+          ) : notFound ? (
+            // Tracking ID Not Found
+            <div className="space-y-6 text-center">
+              <div className="text-5xl mb-4">❌</div>
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {isMs ? 'ID Penjejakan Tidak Dijumpai' : 'Tracking ID Not Found'}
+                </h2>
+                <p className="text-sm text-slate-400">
+                  {isMs 
+                    ? 'ID penjejakan yang anda masukkan tidak wujud dalam sistem kami'
+                    : 'The tracking ID you entered does not exist in our system'}
+                </p>
+              </div>
+
+              <div className="bg-amber-900/20 border border-amber-500/30 rounded-xl p-6 max-w-md mx-auto">
+                <div className="text-amber-400 text-3xl mb-3">💡</div>
+                <div className="text-sm text-slate-300 mb-3">
+                  {isMs ? 'Sila pastikan:' : 'Please ensure:'}
+                </div>
+                <div className="text-left text-xs text-slate-400 space-y-2">
+                  <div>• {isMs ? 'ID penjejakan anda betul' : 'Your tracking ID is correct'}</div>
+                  <div>• {isMs ? 'Format: DR diikuti 10-12 aksara' : 'Format: DR followed by 10-12 characters'}</div>
+                  <div>• {isMs ? 'ID penjejakan sensitif huruf besar/kecil' : 'Tracking ID is case-sensitive'}</div>
+                </div>
+              </div>
+
+              <div className="flex flex-col space-y-3 max-w-md mx-auto">
+                <button
+                  onClick={() => { setShowResults(false); setNotFound(false); }}
+                  className="w-full px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all"
+                >
+                  {isMs ? 'Cuba Lagi' : 'Try Again'}
+                </button>
+                <Link
+                  href="/recover"
+                  className="w-full px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-all text-center"
+                >
+                  {isMs ? 'Buat Permohonan Baharu' : 'Make New Request'}
                 </Link>
               </div>
             </div>
@@ -140,9 +313,13 @@ export default function TrackPage() {
               
               {/* Header */}
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-white mb-2">Request Status</h1>
+                <h1 className="text-2xl font-bold text-white mb-2">
+                  {isMs ? 'Status Permohonan' : 'Request Status'}
+                </h1>
                 <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-600/20 border border-blue-500/30">
-                  <span className="text-xs text-slate-300">Tracking ID:</span>
+                  <span className="text-xs text-slate-300">
+                    {isMs ? 'ID Penjejakan:' : 'Tracking ID:'}
+                  </span>
                   <span className="text-sm font-mono font-bold text-blue-400">{trackingId}</span>
                 </div>
               </div>
@@ -151,8 +328,12 @@ export default function TrackPage() {
               <div className="bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/30 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">Current Status</div>
-                    <div className="text-xl font-bold text-white">Processing & Approval</div>
+                    <div className="text-xs text-slate-400 mb-1">
+                      {isMs ? 'Status Semasa' : 'Current Status'}
+                    </div>
+                    <div className="text-xl font-bold text-white">
+                      {isMs ? 'Pemprosesan & Kelulusan' : 'Processing & Approval'}
+                    </div>
                   </div>
                   <div className="w-16 h-16 rounded-full bg-blue-600/20 border-2 border-blue-500 flex items-center justify-center animate-pulse">
                     <div className="text-2xl">⚙️</div>
@@ -160,19 +341,29 @@ export default function TrackPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">Estimated Delivery</div>
-                    <div className="text-sm font-semibold text-white">{estimatedDelivery}</div>
+                    <div className="text-xs text-slate-400 mb-1">
+                      {isMs ? 'Anggaran Penghantaran' : 'Estimated Delivery'}
+                    </div>
+                    <div className="text-sm font-semibold text-white">
+                      {formatDateShort(estimatedDeliveryDate)}
+                    </div>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">Days Remaining</div>
-                    <div className="text-sm font-semibold text-white">{daysRemaining} days</div>
+                    <div className="text-xs text-slate-400 mb-1">
+                      {isMs ? 'Hari Berbaki' : 'Days Remaining'}
+                    </div>
+                    <div className="text-sm font-semibold text-white">
+                      {daysRemaining} {isMs ? 'hari' : 'days'}
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Progress Timeline */}
               <div className="bg-[#111827] rounded-xl p-6">
-                <h3 className="text-base font-semibold text-white mb-6">Progress Timeline</h3>
+                <h3 className="text-base font-semibold text-white mb-6">
+                  {isMs ? 'Garis Masa Kemajuan' : 'Progress Timeline'}
+                </h3>
                 <div className="space-y-4">
                   {statusSteps.map((step, index) => (
                     <div key={step.step} className="flex items-start space-x-4">
@@ -194,7 +385,7 @@ export default function TrackPage() {
                         <div className={`text-sm font-semibold ${
                           step.status === 'pending' ? 'text-slate-500' : 'text-white'
                         }`}>
-                          {step.title}
+                          {isMs ? step.titleMs : step.title}
                         </div>
                         <div className={`text-xs mt-1 ${
                           step.status === 'pending' ? 'text-slate-600' : 'text-slate-400'
@@ -209,16 +400,20 @@ export default function TrackPage() {
 
               {/* Documents Requested */}
               <div className="bg-[#111827] rounded-xl p-6">
-                <h3 className="text-base font-semibold text-white mb-4">Documents Requested</h3>
+                <h3 className="text-base font-semibold text-white mb-4">
+                  {isMs ? 'Dokumen Dipohon' : 'Documents Requested'}
+                </h3>
                 <div className="space-y-3">
                   {documentsRequested.map((doc, index) => (
                     <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-[#0A0E1A] border border-white/10">
                       <div>
-                        <div className="text-sm font-medium text-white">{doc.name}</div>
+                        <div className="text-sm font-medium text-white">
+                          {isMs ? doc.nameMs : doc.name}
+                        </div>
                         <div className="text-xs text-slate-400">{doc.agency}</div>
                       </div>
                       <div className="px-2.5 py-1 rounded-full bg-blue-600/20 text-blue-400 text-xs font-semibold">
-                        {doc.status}
+                        {isMs ? doc.statusMs : doc.status}
                       </div>
                     </div>
                   ))}
@@ -230,14 +425,18 @@ export default function TrackPage() {
                 <div className="flex items-start space-x-3">
                   <div className="text-amber-400 mt-0.5">💬</div>
                   <div>
-                    <div className="text-sm font-semibold text-white mb-1">Need Help?</div>
+                    <div className="text-sm font-semibold text-white mb-1">
+                      {isMs ? 'Perlukan Bantuan?' : 'Need Help?'}
+                    </div>
                     <div className="text-xs text-slate-300 mb-3">
-                      If you have any questions about your request, contact the relevant agency:
+                      {isMs 
+                        ? 'Jika anda mempunyai pertanyaan mengenai permohonan anda, hubungi agensi yang berkaitan:'
+                        : 'If you have any questions about your request, contact the relevant agency:'}
                     </div>
                     <div className="space-y-1 text-xs text-slate-400">
-                      <div>• JPN Helpline: 1-300-88-1300</div>
-                      <div>• JPJ Helpline: 03-8000 8000</div>
-                      <div>• Immigration: 03-8880 1000</div>
+                      <div>• {isMs ? 'Talian Bantuan JPN' : 'JPN Helpline'}: 1-300-88-1300</div>
+                      <div>• {isMs ? 'Talian Bantuan JPJ' : 'JPJ Helpline'}: 03-8000 8000</div>
+                      <div>• {isMs ? 'Imigresen' : 'Immigration'}: 03-8880 1000</div>
                     </div>
                   </div>
                 </div>
@@ -249,13 +448,13 @@ export default function TrackPage() {
                   onClick={() => setShowResults(false)}
                   className="flex-1 px-6 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold transition-all"
                 >
-                  Track Another Request
+                  {isMs ? 'Jejak Permohonan Lain' : 'Track Another Request'}
                 </button>
                 <Link
-                  href="/"
-                  className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all"
+                  href="/recover"
+                  className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all text-center"
                 >
-                  Home
+                  {isMs ? 'Permohonan Baharu' : 'New Request'}
                 </Link>
               </div>
 

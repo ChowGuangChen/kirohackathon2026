@@ -4,10 +4,25 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 
 type DisasterType = 'flood' | 'fire' | 'landslide' | 'other';
-type DocumentType = 'mykad' | 'passport' | 'birth-cert' | 'driving-license';
+type DocumentType = 
+  | 'mykad' 
+  | 'birth-cert' 
+  | 'marriage-cert' 
+  | 'passport' 
+  | 'driving-license' 
+  | 'vehicle-grant'
+  | 'land-title'
+  | 'academic-cert'
+  | 'oku-card'
+  | 'bank-passbook'
+  | 'insurance-policy';
 
 export default function RecoverPage() {
   const [currentStep, setCurrentStep] = useState(1);
+  const [language, setLanguage] = useState<'en' | 'ms'>('en');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isMs = language === 'ms';
+  
   const [formData, setFormData] = useState({
     // Step 1
     fullName: '',
@@ -27,6 +42,10 @@ export default function RecoverPage() {
     trackingId: ''
   });
 
+  const toggleLanguage = () => {
+    setLanguage(language === 'en' ? 'ms' : 'en');
+  };
+
   const handleNext = () => {
     if (currentStep < 5) setCurrentStep(currentStep + 1);
   };
@@ -36,10 +55,77 @@ export default function RecoverPage() {
   };
 
   const handleSubmit = () => {
-    // Generate tracking ID
-    const trackingId = `DR${Date.now().toString(36).toUpperCase()}`;
-    setFormData({ ...formData, trackingId, confirmed: true });
-    setCurrentStep(5);
+    // Show loading bar
+    setIsSubmitting(true);
+    
+    // Simulate processing time
+    setTimeout(() => {
+      // Generate tracking ID
+      const trackingId = `DR${Date.now().toString(36).toUpperCase()}`;
+      const submissionDate = new Date().toISOString();
+      
+      // Store the request data in localStorage
+      const requestData = {
+        trackingId,
+        submissionDate,
+        fullName: formData.fullName,
+        icNumber: formData.icNumber,
+        phoneNumber: formData.phoneNumber,
+        email: formData.email,
+        address: formData.address,
+        disasterType: formData.disasterType,
+        documentsLost: formData.documentsLost,
+        status: 'processing',
+        currentStep: 3 // Step 3: Processing & Approval
+      };
+      
+      // Save to localStorage
+      localStorage.setItem(`request_${trackingId}`, JSON.stringify(requestData));
+      
+      setFormData({ ...formData, trackingId, confirmed: true });
+      setIsSubmitting(false);
+      setCurrentStep(5);
+    }, 2000); // 2 second loading
+  };
+
+  const handleNewRequest = () => {
+    // Reset form and start over
+    setFormData({
+      fullName: '',
+      icNumber: '',
+      phoneNumber: '',
+      address: '',
+      email: '',
+      disasterType: '',
+      documentsLost: [],
+      proofUploaded: false,
+      faceVerified: false,
+      confirmed: false,
+      trackingId: ''
+    });
+    setCurrentStep(1);
+  };
+
+  const handleCameraAccess = async () => {
+    try {
+      // Request camera permission
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      
+      // Permission granted - simulate taking photo
+      setTimeout(() => {
+        // Stop the camera
+        stream.getTracks().forEach(track => track.stop());
+        // Mark as verified
+        setFormData({ ...formData, faceVerified: true });
+      }, 1500);
+      
+    } catch (error) {
+      // Permission denied or error
+      alert(isMs 
+        ? 'Akses kamera diperlukan untuk pengesahan wajah. Sila benarkan akses kamera dalam tetapan pelayar anda.'
+        : 'Camera access is required for face verification. Please allow camera access in your browser settings.'
+      );
+    }
   };
 
   const toggleDocument = (doc: DocumentType) => {
@@ -70,7 +156,17 @@ export default function RecoverPage() {
             </div>
             <span className="text-xl font-bold text-white">DocuRecover</span>
           </Link>
-          <span className="text-sm text-slate-400">Step {currentStep} of 5</span>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={toggleLanguage}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors border border-white/10"
+            >
+              {isMs ? 'EN' : 'BM'}
+            </button>
+            <span className="text-sm text-slate-400">
+              {isMs ? 'Langkah' : 'Step'} {currentStep} {isMs ? 'daripada' : 'of'} 5
+            </span>
+          </div>
         </div>
       </header>
 
@@ -94,11 +190,11 @@ export default function RecoverPage() {
             ))}
           </div>
           <div className="flex justify-between text-xs text-slate-400">
-            <span>Register</span>
-            <span>Report</span>
-            <span>Upload</span>
-            <span>Confirm</span>
-            <span>Track</span>
+            <span>{isMs ? 'Daftar' : 'Register'}</span>
+            <span>{isMs ? 'Lapor' : 'Report'}</span>
+            <span>{isMs ? 'Muat Naik' : 'Upload'}</span>
+            <span>{isMs ? 'Sahkan' : 'Confirm'}</span>
+            <span>{isMs ? 'Jejak' : 'Track'}</span>
           </div>
         </div>
       </div>
@@ -111,13 +207,19 @@ export default function RecoverPage() {
           {currentStep === 1 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">Register Your Information</h2>
-                <p className="text-sm text-slate-400">We need your details to process your document recovery</p>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {isMs ? 'Daftarkan Maklumat Anda' : 'Register Your Information'}
+                </h2>
+                <p className="text-sm text-slate-400">
+                  {isMs ? 'Kami perlukan butiran anda untuk memproses pemulihan dokumen' : 'We need your details to process your document recovery'}
+                </p>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Full Name (as per IC)</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    {isMs ? 'Nama Penuh (seperti dalam IC)' : 'Full Name (as per IC)'}
+                  </label>
                   <input
                     type="text"
                     value={formData.fullName}
@@ -128,7 +230,9 @@ export default function RecoverPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">IC Number</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    {isMs ? 'Nombor IC' : 'IC Number'}
+                  </label>
                   <input
                     type="text"
                     value={formData.icNumber}
@@ -139,7 +243,9 @@ export default function RecoverPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Phone Number</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    {isMs ? 'Nombor Telefon' : 'Phone Number'}
+                  </label>
                   <input
                     type="tel"
                     value={formData.phoneNumber}
@@ -150,7 +256,9 @@ export default function RecoverPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Address</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    {isMs ? 'Alamat' : 'Address'}
+                  </label>
                   <textarea
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
@@ -161,7 +269,9 @@ export default function RecoverPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    {isMs ? 'Alamat Emel' : 'Email Address'}
+                  </label>
                   <input
                     type="email"
                     value={formData.email}
@@ -177,7 +287,7 @@ export default function RecoverPage() {
                 disabled={!formData.fullName || !formData.icNumber || !formData.phoneNumber || !formData.address || !formData.email}
                 className="w-full px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-semibold transition-all"
               >
-                Continue to Report Disaster
+                {isMs ? 'Teruskan ke Laporan Bencana' : 'Continue to Report Disaster'}
               </button>
             </div>
           )}
@@ -186,18 +296,24 @@ export default function RecoverPage() {
           {currentStep === 2 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">Report Disaster & Documents</h2>
-                <p className="text-sm text-slate-400">Tell us what happened and which documents you need to recover</p>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {isMs ? 'Lapor Bencana & Dokumen' : 'Report Disaster & Documents'}
+                </h2>
+                <p className="text-sm text-slate-400">
+                  {isMs ? 'Beritahu kami apa yang berlaku dan dokumen yang perlu dipulihkan' : 'Tell us what happened and which documents you need to recover'}
+                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-3">Type of Disaster</label>
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  {isMs ? 'Jenis Bencana' : 'Type of Disaster'}
+                </label>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { value: 'flood', label: 'Flood', icon: '🌊' },
-                    { value: 'fire', label: 'Fire', icon: '🔥' },
-                    { value: 'landslide', label: 'Landslide', icon: '⛰️' },
-                    { value: 'other', label: 'Other', icon: '⚠️' }
+                    { value: 'flood', labelEn: 'Flood', labelMs: 'Banjir', icon: '🌊' },
+                    { value: 'fire', labelEn: 'Fire', labelMs: 'Kebakaran', icon: '🔥' },
+                    { value: 'landslide', labelEn: 'Landslide', labelMs: 'Tanah Runtuh', icon: '⛰️' },
+                    { value: 'other', labelEn: 'Other', labelMs: 'Lain-lain', icon: '⚠️' }
                   ].map((disaster) => (
                     <button
                       key={disaster.value}
@@ -209,39 +325,113 @@ export default function RecoverPage() {
                       }`}
                     >
                       <div className="text-2xl mb-1">{disaster.icon}</div>
-                      <div className="text-sm font-medium">{disaster.label}</div>
+                      <div className="text-sm font-medium">{isMs ? disaster.labelMs : disaster.labelEn}</div>
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-3">Documents Lost or Damaged (Select all that apply)</label>
-                <div className="space-y-2">
-                  {[
-                    { value: 'mykad', label: 'MyKad (Identity Card)', icon: '🪪' },
-                    { value: 'passport', label: 'Malaysian Passport', icon: '🛂' },
-                    { value: 'birth-cert', label: 'Birth Certificate', icon: '📜' },
-                    { value: 'driving-license', label: 'Driving License', icon: '🚗' }
-                  ].map((doc) => (
-                    <button
-                      key={doc.value}
-                      onClick={() => toggleDocument(doc.value as DocumentType)}
-                      className={`w-full p-4 rounded-lg border text-left transition-all flex items-center space-x-3 ${
-                        formData.documentsLost.includes(doc.value as DocumentType)
-                          ? 'bg-blue-600/20 border-blue-500'
-                          : 'bg-[#111827] border-white/10 hover:border-white/20'
-                      }`}
-                    >
-                      <div className="text-2xl">{doc.icon}</div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-white">{doc.label}</div>
-                      </div>
-                      {formData.documentsLost.includes(doc.value as DocumentType) && (
-                        <div className="text-blue-400">✓</div>
-                      )}
-                    </button>
-                  ))}
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  {isMs ? 'Dokumen Hilang atau Rosak (Pilih semua yang berkenaan)' : 'Documents Lost or Damaged (Select all that apply)'}
+                </label>
+                
+                {/* Identity & Citizenship */}
+                <div className="mb-4">
+                  <div className="text-xs font-semibold text-blue-400 mb-2 uppercase tracking-wider">
+                    {isMs ? 'Identiti & Kewarganegaraan (JPN)' : 'Identity & Citizenship (JPN)'}
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { value: 'mykad', label: 'MyKad (Identity Card / IC)', icon: '🪪' },
+                      { value: 'birth-cert', label: 'Birth Certificate (Sijil Kelahiran)', icon: '📜' },
+                      { value: 'marriage-cert', label: 'Marriage / Divorce Certificate', icon: '💍' }
+                    ].map((doc) => (
+                      <button
+                        key={doc.value}
+                        onClick={() => toggleDocument(doc.value as DocumentType)}
+                        className={`w-full p-3 rounded-lg border text-left transition-all flex items-center space-x-3 ${
+                          formData.documentsLost.includes(doc.value as DocumentType)
+                            ? 'bg-blue-600/20 border-blue-500'
+                            : 'bg-[#111827] border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        <div className="text-xl">{doc.icon}</div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-white">{doc.label}</div>
+                        </div>
+                        {formData.documentsLost.includes(doc.value as DocumentType) && (
+                          <div className="text-blue-400">✓</div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Travel & Transport */}
+                <div className="mb-4">
+                  <div className="text-xs font-semibold text-sky-400 mb-2 uppercase tracking-wider">
+                    {isMs ? 'Perjalanan & Pengangkutan (Imigresen & JPJ)' : 'Travel & Transport (Immigration & JPJ)'}
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { value: 'passport', label: 'Malaysian International Passport', icon: '🛂' },
+                      { value: 'driving-license', label: 'Competent Driving Licence (LMM)', icon: '🚗' },
+                      { value: 'vehicle-grant', label: 'Vehicle Ownership Certificate (Geran)', icon: '📄' }
+                    ].map((doc) => (
+                      <button
+                        key={doc.value}
+                        onClick={() => toggleDocument(doc.value as DocumentType)}
+                        className={`w-full p-3 rounded-lg border text-left transition-all flex items-center space-x-3 ${
+                          formData.documentsLost.includes(doc.value as DocumentType)
+                            ? 'bg-blue-600/20 border-blue-500'
+                            : 'bg-[#111827] border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        <div className="text-xl">{doc.icon}</div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-white">{doc.label}</div>
+                        </div>
+                        {formData.documentsLost.includes(doc.value as DocumentType) && (
+                          <div className="text-blue-400">✓</div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Property, Education & Finance */}
+                <div>
+                  <div className="text-xs font-semibold text-emerald-400 mb-2 uppercase tracking-wider">
+                    {isMs ? 'Hartanah, Pendidikan & Kewangan' : 'Property, Education & Finance'}
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { value: 'land-title', label: 'Land Title / House Grant (Geran Tanah)', icon: '🏠' },
+                      { value: 'academic-cert', label: 'SPM / STPM / University Certificates', icon: '🎓' },
+                      { value: 'oku-card', label: 'OKU Card (Persons with Disabilities)', icon: '♿' },
+                      { value: 'bank-passbook', label: 'Bank Passbook', icon: '🏦' },
+                      { value: 'insurance-policy', label: 'Insurance Policy Summary', icon: '📋' }
+                    ].map((doc) => (
+                      <button
+                        key={doc.value}
+                        onClick={() => toggleDocument(doc.value as DocumentType)}
+                        className={`w-full p-3 rounded-lg border text-left transition-all flex items-center space-x-3 ${
+                          formData.documentsLost.includes(doc.value as DocumentType)
+                            ? 'bg-blue-600/20 border-blue-500'
+                            : 'bg-[#111827] border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        <div className="text-xl">{doc.icon}</div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-white">{doc.label}</div>
+                        </div>
+                        {formData.documentsLost.includes(doc.value as DocumentType) && (
+                          <div className="text-blue-400">✓</div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -250,14 +440,14 @@ export default function RecoverPage() {
                   onClick={handleBack}
                   className="px-6 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold transition-all"
                 >
-                  Back
+                  {isMs ? 'Kembali' : 'Back'}
                 </button>
                 <button
                   onClick={handleNext}
                   disabled={!formData.disasterType || formData.documentsLost.length === 0}
                   className="flex-1 px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-semibold transition-all"
                 >
-                  Continue to Upload Proof
+                  {isMs ? 'Teruskan ke Muat Naik Bukti' : 'Continue to Upload Proof'}
                 </button>
               </div>
             </div>
@@ -267,12 +457,18 @@ export default function RecoverPage() {
           {currentStep === 3 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">Upload Proof & Verification</h2>
-                <p className="text-sm text-slate-400">Upload evidence of damaged documents and verify your identity</p>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {isMs ? 'Muat Naik Bukti & Pengesahan' : 'Upload Proof & Verification'}
+                </h2>
+                <p className="text-sm text-slate-400">
+                  {isMs ? 'Muat naik bukti dokumen rosak dan sahkan identiti anda' : 'Upload evidence of damaged documents and verify your identity'}
+                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-3">Upload Proof of Damaged/Lost Documents</label>
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  {isMs ? 'Muat Naik Bukti Dokumen Hilang/Rosak' : 'Upload Proof of Damaged/Lost Documents'}
+                </label>
                 <div className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center hover:border-blue-500/50 transition-all cursor-pointer">
                   <input
                     type="file"
@@ -284,28 +480,37 @@ export default function RecoverPage() {
                   />
                   <label htmlFor="proof-upload" className="cursor-pointer">
                     <div className="text-4xl mb-2">📸</div>
-                    <div className="text-sm font-medium text-white mb-1">Click to upload photos</div>
-                    <div className="text-xs text-slate-400">PNG, JPG up to 10MB each</div>
+                    <div className="text-sm font-medium text-white mb-1">
+                      {isMs ? 'Klik untuk muat naik foto' : 'Click to upload photos'}
+                    </div>
+                    <div className="text-xs text-slate-400">PNG, JPG {isMs ? 'sehingga' : 'up to'} 10MB {isMs ? 'setiap satu' : 'each'}</div>
                   </label>
                   {formData.proofUploaded && (
                     <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-sm">
-                      <span className="mr-1">✓</span> Files uploaded
+                      <span className="mr-1">✓</span> {isMs ? 'Fail dimuat naik' : 'Files uploaded'}
                     </div>
                   )}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-3">Face Verification</label>
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  {isMs ? 'Pengesahan Wajah' : 'Face Verification'}
+                </label>
                 <div className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center hover:border-blue-500/50 transition-all">
                   <div className="text-4xl mb-2">📷</div>
-                  <div className="text-sm font-medium text-white mb-1">Verify Your Identity</div>
-                  <div className="text-xs text-slate-400 mb-4">Take a selfie to confirm your identity</div>
+                  <div className="text-sm font-medium text-white mb-1">
+                    {isMs ? 'Sahkan Identiti Anda' : 'Verify Your Identity'}
+                  </div>
+                  <div className="text-xs text-slate-400 mb-4">
+                    {isMs ? 'Ambil gambar selfie untuk mengesahkan identiti' : 'Take a selfie to confirm your identity'}
+                  </div>
                   <button
-                    onClick={() => setFormData({ ...formData, faceVerified: true })}
-                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-all"
+                    onClick={handleCameraAccess}
+                    disabled={formData.faceVerified}
+                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-green-600 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all"
                   >
-                    {formData.faceVerified ? '✓ Verified' : 'Start Camera'}
+                    {formData.faceVerified ? (isMs ? '✓ Disahkan' : '✓ Verified') : (isMs ? 'Mula Kamera' : 'Start Camera')}
                   </button>
                 </div>
               </div>
@@ -315,14 +520,14 @@ export default function RecoverPage() {
                   onClick={handleBack}
                   className="px-6 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold transition-all"
                 >
-                  Back
+                  {isMs ? 'Kembali' : 'Back'}
                 </button>
                 <button
                   onClick={handleNext}
                   disabled={!formData.proofUploaded || !formData.faceVerified}
                   className="flex-1 px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-semibold transition-all"
                 >
-                  Continue to Confirmation
+                  {isMs ? 'Teruskan ke Pengesahan' : 'Continue to Confirmation'}
                 </button>
               </div>
             </div>
@@ -332,13 +537,19 @@ export default function RecoverPage() {
           {currentStep === 4 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">Review & Confirm</h2>
-                <p className="text-sm text-slate-400">Please review your information before submitting</p>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {isMs ? 'Semak & Sahkan' : 'Review & Confirm'}
+                </h2>
+                <p className="text-sm text-slate-400">
+                  {isMs ? 'Sila semak maklumat anda sebelum menghantar' : 'Please review your information before submitting'}
+                </p>
               </div>
 
               <div className="bg-[#111827] rounded-lg p-6 space-y-4">
                 <div>
-                  <div className="text-xs text-slate-400 mb-1">Personal Information</div>
+                  <div className="text-xs text-slate-400 mb-1">
+                    {isMs ? 'Maklumat Peribadi' : 'Personal Information'}
+                  </div>
                   <div className="text-sm text-white font-medium">{formData.fullName}</div>
                   <div className="text-sm text-slate-300">{formData.icNumber}</div>
                   <div className="text-sm text-slate-300">{formData.phoneNumber}</div>
@@ -346,26 +557,45 @@ export default function RecoverPage() {
                 </div>
 
                 <div className="border-t border-white/10 pt-4">
-                  <div className="text-xs text-slate-400 mb-1">Disaster Type</div>
+                  <div className="text-xs text-slate-400 mb-1">
+                    {isMs ? 'Jenis Bencana' : 'Disaster Type'}
+                  </div>
                   <div className="text-sm text-white font-medium capitalize">{formData.disasterType}</div>
                 </div>
 
                 <div className="border-t border-white/10 pt-4">
-                  <div className="text-xs text-slate-400 mb-2">Documents to Recover</div>
+                  <div className="text-xs text-slate-400 mb-2">
+                    {isMs ? 'Dokumen untuk Dipulihkan' : 'Documents to Recover'}
+                  </div>
                   <div className="space-y-1">
-                    {formData.documentsLost.map((doc) => (
-                      <div key={doc} className="text-sm text-white">• {doc.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
-                    ))}
+                    {formData.documentsLost.map((doc) => {
+                      const docNames: Record<string, string> = {
+                        'mykad': 'MyKad (Identity Card)',
+                        'birth-cert': 'Birth Certificate',
+                        'marriage-cert': 'Marriage / Divorce Certificate',
+                        'passport': 'Malaysian Passport',
+                        'driving-license': 'Driving License',
+                        'vehicle-grant': 'Vehicle Ownership Certificate',
+                        'land-title': 'Land Title / House Grant',
+                        'academic-cert': 'Academic Certificates',
+                        'oku-card': 'OKU Card',
+                        'bank-passbook': 'Bank Passbook',
+                        'insurance-policy': 'Insurance Policy'
+                      };
+                      return (
+                        <div key={doc} className="text-sm text-white">• {docNames[doc] || doc}</div>
+                      );
+                    })}
                   </div>
                 </div>
 
                 <div className="border-t border-white/10 pt-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-400">Proof Uploaded</span>
+                    <span className="text-slate-400">{isMs ? 'Bukti Dimuat Naik' : 'Proof Uploaded'}</span>
                     <span className="text-green-400">✓</span>
                   </div>
                   <div className="flex items-center justify-between text-sm mt-2">
-                    <span className="text-slate-400">Face Verified</span>
+                    <span className="text-slate-400">{isMs ? 'Wajah Disahkan' : 'Face Verified'}</span>
                     <span className="text-green-400">✓</span>
                   </div>
                 </div>
@@ -375,7 +605,9 @@ export default function RecoverPage() {
                 <div className="flex items-start space-x-2">
                   <div className="text-blue-400 mt-0.5">ℹ️</div>
                   <div className="text-xs text-slate-300">
-                    By submitting, you authorize government agencies (JPN, JPJ, Immigration) to retrieve your existing records and process your document recovery request.
+                    {isMs 
+                      ? 'Dengan menghantar, anda memberi kuasa kepada agensi kerajaan (JPN, JPJ, Imigresen) untuk mendapatkan rekod sedia ada anda dan memproses permohonan pemulihan dokumen anda.'
+                      : 'By submitting, you authorize government agencies (JPN, JPJ, Immigration) to retrieve your existing records and process your document recovery request.'}
                   </div>
                 </div>
               </div>
@@ -383,17 +615,59 @@ export default function RecoverPage() {
               <div className="flex space-x-3">
                 <button
                   onClick={handleBack}
-                  className="px-6 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold transition-all"
+                  disabled={isSubmitting}
+                  className="px-6 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-semibold transition-all"
                 >
-                  Back
+                  {isMs ? 'Kembali' : 'Back'}
                 </button>
                 <button
                   onClick={handleSubmit}
-                  className="flex-1 px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all"
+                  disabled={isSubmitting}
+                  className="flex-1 px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-blue-700 disabled:cursor-not-allowed text-white font-semibold transition-all"
                 >
-                  Confirm & Submit
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      {isMs ? 'Memproses...' : 'Processing...'}
+                    </span>
+                  ) : (
+                    isMs ? 'Sahkan & Hantar' : 'Confirm & Submit'
+                  )}
                 </button>
               </div>
+
+              {/* Loading Overlay */}
+              {isSubmitting && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+                  <div className="bg-[#111827] rounded-2xl p-8 max-w-md w-full mx-4 border border-blue-500/30">
+                    <div className="text-center mb-6">
+                      <div className="text-4xl mb-4">⚙️</div>
+                      <h3 className="text-xl font-bold text-white mb-2">
+                        {isMs ? 'Menghantar Permohonan' : 'Submitting Request'}
+                      </h3>
+                      <p className="text-sm text-slate-400">
+                        {isMs ? 'Sila tunggu sebentar...' : 'Please wait a moment...'}
+                      </p>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="relative w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 animate-[loading_2s_ease-in-out]"
+                           style={{
+                             animation: 'loading 2s ease-in-out forwards'
+                           }}
+                      ></div>
+                    </div>
+
+                    <div className="mt-4 text-xs text-slate-500 text-center">
+                      {isMs ? 'Menyambung ke pangkalan data kerajaan...' : 'Connecting to government database...'}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -402,51 +676,85 @@ export default function RecoverPage() {
             <div className="space-y-6 text-center">
               <div className="text-5xl mb-4">✅</div>
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">Request Submitted Successfully!</h2>
-                <p className="text-sm text-slate-400">Your document recovery request has been received</p>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {isMs ? 'Permohonan Berjaya Dihantar!' : 'Request Submitted Successfully!'}
+                </h2>
+                <p className="text-sm text-slate-400">
+                  {isMs ? 'Permohonan pemulihan dokumen anda telah diterima' : 'Your document recovery request has been received'}
+                </p>
               </div>
 
               <div className="bg-[#111827] rounded-lg p-6">
-                <div className="text-xs text-slate-400 mb-2">Your Tracking ID</div>
+                <div className="text-xs text-slate-400 mb-2">
+                  {isMs ? 'ID Penjejakan Anda' : 'Your Tracking ID'}
+                </div>
                 <div className="text-2xl font-bold text-blue-400 font-mono mb-4">{formData.trackingId}</div>
-                <div className="text-xs text-slate-400">Save this ID to track your request status</div>
+                <div className="text-xs text-slate-400">
+                  {isMs ? 'Simpan ID ini untuk menjejak status permohonan anda' : 'Save this ID to track your request status'}
+                </div>
               </div>
 
               <div className="text-left bg-blue-900/20 border border-blue-500/30 rounded-lg p-6 space-y-3">
-                <div className="font-semibold text-white mb-3">What happens next?</div>
+                <div className="font-semibold text-white mb-3">
+                  {isMs ? 'Apa yang berlaku seterusnya?' : 'What happens next?'}
+                </div>
                 <div className="flex items-start space-x-3 text-sm">
                   <div className="text-blue-400 font-bold">1.</div>
-                  <div className="text-slate-300">Government agencies will verify your existing records (1-2 days)</div>
+                  <div className="text-slate-300">
+                    {isMs 
+                      ? 'Agensi kerajaan akan mengesahkan rekod sedia ada anda (1-2 hari)'
+                      : 'Government agencies will verify your existing records (1-2 days)'}
+                  </div>
                 </div>
                 <div className="flex items-start space-x-3 text-sm">
                   <div className="text-blue-400 font-bold">2.</div>
-                  <div className="text-slate-300">Processing and approval of new documents (3-5 days)</div>
+                  <div className="text-slate-300">
+                    {isMs 
+                      ? 'Pemprosesan dan kelulusan dokumen baharu (3-5 hari)'
+                      : 'Processing and approval of new documents (3-5 days)'}
+                  </div>
                 </div>
                 <div className="flex items-start space-x-3 text-sm">
                   <div className="text-blue-400 font-bold">3.</div>
-                  <div className="text-slate-300">Printing and quality check (2-3 days)</div>
+                  <div className="text-slate-300">
+                    {isMs 
+                      ? 'Pencetakan dan pemeriksaan kualiti (2-3 hari)'
+                      : 'Printing and quality check (2-3 days)'}
+                  </div>
                 </div>
                 <div className="flex items-start space-x-3 text-sm">
                   <div className="text-blue-400 font-bold">4.</div>
-                  <div className="text-slate-300">Delivery to your address (5-7 days)</div>
+                  <div className="text-slate-300">
+                    {isMs 
+                      ? 'Penghantaran ke alamat anda (5-7 hari)'
+                      : 'Delivery to your address (5-7 days)'}
+                  </div>
                 </div>
                 <div className="pt-3 border-t border-white/10 text-xs text-slate-400">
-                  Total estimated time: 11-17 days (within 14 working days)
+                  {isMs 
+                    ? 'Jumlah anggaran masa: 11-17 hari (dalam 14 hari bekerja)'
+                    : 'Total estimated time: 11-17 days (within 14 working days)'}
                 </div>
               </div>
 
-              <div className="flex space-x-3">
+              <div className="flex flex-col space-y-3">
                 <Link
                   href={`/track?id=${formData.trackingId}`}
-                  className="flex-1 px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all text-center"
+                  className="w-full px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all text-center"
                 >
-                  Track Status
+                  {isMs ? 'Jejak Status' : 'Track Status'}
                 </Link>
+                <button
+                  onClick={handleNewRequest}
+                  className="w-full px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-all"
+                >
+                  {isMs ? 'Hantar Permohonan Lain' : 'Submit Another Request'}
+                </button>
                 <Link
                   href="/"
-                  className="px-6 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold transition-all"
+                  className="w-full px-6 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold transition-all text-center"
                 >
-                  Home
+                  {isMs ? 'Kembali ke Laman Utama' : 'Back to Home'}
                 </Link>
               </div>
             </div>
